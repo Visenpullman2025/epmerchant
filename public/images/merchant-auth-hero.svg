@@ -1,0 +1,29 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="48" x2="1120" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14223F"/>
+      <stop offset="0.48" stop-color="#213B6B"/>
+      <stop offset="1" stop-color="#3263A8"/>
+    </linearGradient>
+    <linearGradient id="card" x1="312" y1="160" x2="874" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.08"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1200" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="55"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="720" rx="36" fill="url(#bg)"/>
+  <g opacity="0.68" filter="url(#blur)">
+    <circle cx="300" cy="86" r="150" fill="#69C3FF"/>
+    <circle cx="1026" cy="640" r="220" fill="#B896FF"/>
+  </g>
+  <rect x="214" y="118" width="772" height="484" rx="36" fill="url(#card)" stroke="#FFFFFF" stroke-opacity="0.38"/>
+  <rect x="288" y="188" width="360" height="56" rx="12" fill="#F5F9FF" fill-opacity="0.84"/>
+  <rect x="288" y="274" width="624" height="56" rx="12" fill="#F5F9FF" fill-opacity="0.72"/>
+  <rect x="288" y="360" width="624" height="56" rx="12" fill="#F5F9FF" fill-opacity="0.72"/>
+  <rect x="288" y="462" width="224" height="56" rx="14" fill="#2E84FF"/>
+  <circle cx="846" cy="216" r="48" fill="#FFD66B"/>
+  <path d="M846 188L855 209H878L860 223L866 244L846 231L826 244L832 223L814 209H837L846 188Z" fill="#255298"/>
+  <text x="318" y="226" fill="#17345E" font-size="30" font-family="sans-serif" font-weight="700">EP Merchant</text>
+</svg>
