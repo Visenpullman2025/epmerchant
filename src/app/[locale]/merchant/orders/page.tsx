@@ -71,6 +71,10 @@ function normalizeMerchantOrderRow(row: MerchantOrderItem): MerchantOrderItem {
   if (typeof r.status === "string" && r.status === "in_service") {
     status = "inService";
   }
+  const wsCanon = workflowStatus ? toCanonicalWorkflowToken(workflowStatus) : "";
+  if (wsCanon === "inService") {
+    status = "inService";
+  }
 
   return {
     ...row,
@@ -85,7 +89,16 @@ function normalizeMerchantOrderRow(row: MerchantOrderItem): MerchantOrderItem {
 }
 
 function rawWorkflowOf(order: MerchantOrderItem): string {
-  return order.workflowStatus || order.status;
+  if (order.workflowStatus) return order.workflowStatus;
+  /** 联调兼容：仅有 tab 用 status、无 workflow 时，已确认时间 + 已付款视为商家已确认 */
+  if (
+    order.status === "pending" &&
+    order.confirmedServiceTime &&
+    paymentAllowsStart(order)
+  ) {
+    return "merchantConfirmed";
+  }
+  return order.status;
 }
 
 /** 仅「已确认上门时间」后可开始服务；含 accepted；无 workflowStatus 时以已保存的确认时间作为窄回退（联调兼容） */
@@ -121,6 +134,36 @@ function hasExplicitPaymentSignal(order: MerchantOrderItem): boolean {
   if (order.paymentStatus != null && String(order.paymentStatus).length > 0) return true;
   if (order.customerPaid != null) return true;
   return false;
+}
+
+/**
+ * 商家已确认上门时间且客户已付款（或后端明确允许开始服务），等待商家点「开始服务」。
+ * 这类订单后端常仍挂在 status=pending 查询下，商户端应从「待确认」挪到「服务中」展示。
+ */
+function isAwaitingMerchantStart(order: MerchantOrderItem): boolean {
+  const w = toCanonicalWorkflowToken(rawWorkflowOf(order));
+  if (
+    w === "inService" ||
+    w === "merchantDone" ||
+    w === "done" ||
+    w === "customer_completed" ||
+    w === "customerConfirmed" ||
+    w === "cancelled" ||
+    w === "new"
+  ) {
+    return false;
+  }
+  const merchantTimeOk = w === "merchantConfirmed" || w === "accepted" || w === "confirmed";
+  if (!merchantTimeOk) return false;
+  if (order.canMerchantStartService === true) return true;
+  return paymentAllowsStart(order);
+}
+
+/** 已付款待上门订单不再展示「改时间/备注」大表单，仅保留「开始服务」 */
+function needsScheduleEditor(order: MerchantOrderItem): boolean {
+  if (order.status === "inService" || order.status === "done" || order.status === "cancelled") return false;
+  if (isAwaitingMerchantStart(order)) return false;
+  return order.status === "new" || order.status === "pending";
 }
 
 /** 后端显式 true 时可直接开始服务；否则走本地门禁与付款信号 */
@@ -216,6 +259,81 @@ export default function MerchantOrdersPage() {
   }
 
   async function loadOrders(status: MerchantOrderStatus, active = true) {
+    setLoading(true);
+
+    const finishList = (nextOrders: MerchantOrderItem[]) => {
+      if (!active) return;
+      setLoading(false);
+      setOrders(nextOrders);
+      setScheduleDrafts((current) => {
+        const next = { ...current };
+        nextOrders.forEach((order) => {
+          next[order.orderNo] = current[order.orderNo] || toDateTimeLocalValue(order.confirmedServiceTime);
+        });
+        return next;
+      });
+      setMerchantNotes((current) => {
+        const next = { ...current };
+        nextOrders.forEach((order) => {
+          next[order.orderNo] = current[order.orderNo] || order.merchantNote || "";
+        });
+        return next;
+      });
+    };
+
+    if (status === "inService") {
+      const [inRes, pendRes] = await Promise.all([
+        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=inService&page=1&pageSize=20`),
+        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=pending&page=1&pageSize=20`)
+      ]);
+      if (!active) return;
+      if (!inRes.ok && !pendRes.ok) {
+        setLoading(false);
+        setMessageTone("error");
+        setMessage(inRes.ok ? pendRes.message : inRes.message);
+        setOrders([]);
+        return;
+      }
+      setMessage("");
+      const listIn = inRes.ok ? inRes.data.list.map(normalizeMerchantOrderRow) : [];
+      const listPend = pendRes.ok ? pendRes.data.list.map(normalizeMerchantOrderRow) : [];
+      const byNo = new Map<string, MerchantOrderItem>();
+      for (const o of listIn) byNo.set(o.orderNo, o);
+      for (const o of listPend) {
+        if (!byNo.has(o.orderNo)) byNo.set(o.orderNo, o);
+      }
+      const merged = [...byNo.values()].filter((o) => {
+        const w = toCanonicalWorkflowToken(rawWorkflowOf(o));
+        return w === "inService" || isAwaitingMerchantStart(o);
+      });
+      merged.sort((a, b) => {
+        const pa = isAwaitingMerchantStart(a) ? 0 : 1;
+        const pb = isAwaitingMerchantStart(b) ? 0 : 1;
+        if (pa !== pb) return pa - pb;
+        return 0;
+      });
+      finishList(merged);
+      return;
+    }
+
+    if (status === "pending") {
+      const result = await getJson<MerchantOrdersResponse>(
+        `/api/merchant/orders?status=pending&page=1&pageSize=20`
+      );
+      if (!active) return;
+      if (!result.ok) {
+        setLoading(false);
+        setMessageTone("error");
+        setMessage(result.message);
+        setOrders([]);
+        return;
+      }
+      setMessage("");
+      const nextOrders = result.data.list.map(normalizeMerchantOrderRow).filter((o) => !isAwaitingMerchantStart(o));
+      finishList(nextOrders);
+      return;
+    }
+
     const result = await getJson<MerchantOrdersResponse>(
       `/api/merchant/orders?status=${status}&page=1&pageSize=20`
     );
@@ -227,22 +345,9 @@ export default function MerchantOrdersPage() {
       setOrders([]);
       return;
     }
+    setMessage("");
     const nextOrders = result.data.list.map(normalizeMerchantOrderRow);
-    setOrders(nextOrders);
-    setScheduleDrafts((current) => {
-      const next = { ...current };
-      nextOrders.forEach((order) => {
-        next[order.orderNo] = current[order.orderNo] || toDateTimeLocalValue(order.confirmedServiceTime);
-      });
-      return next;
-    });
-    setMerchantNotes((current) => {
-      const next = { ...current };
-      nextOrders.forEach((order) => {
-        next[order.orderNo] = current[order.orderNo] || order.merchantNote || "";
-      });
-      return next;
-    });
+    finishList(nextOrders);
   }
 
   useEffect(() => {
@@ -348,7 +453,7 @@ export default function MerchantOrdersPage() {
       footer={<MerchantBottomNav locale={locale} />}
       heroAlt={t("heroAlt")}
       heroSrc="/images/merchant-dashboard-hero.svg"
-      subtitle={t("subtitle")}
+      subtitle={activeStatus === "inService" ? t("subtitleInService") : t("subtitle")}
       title={t("title")}
       topRight={<span className="text-xs" style={{ color: "var(--muted)" }}>{t("live")}</span>}
     >
@@ -370,7 +475,7 @@ export default function MerchantOrdersPage() {
         ))}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 space-y-2">
         {loading ? (
           <div className="rounded-xl border p-4 text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
             {t("loading")}
@@ -390,7 +495,8 @@ export default function MerchantOrdersPage() {
         {orders.length ? (
           orders.map((order) => {
             const currentWorkflow = rawWorkflowOf(order);
-            const showScheduleEditor = order.status === "new" || order.status === "pending";
+            const awaitingStart = isAwaitingMerchantStart(order);
+            const showScheduleEditor = needsScheduleEditor(order);
             const showInServiceReschedule = order.status === "inService";
             const showStartService =
               workflowAllowsStartService(order) || order.canMerchantStartService === true;
@@ -403,74 +509,106 @@ export default function MerchantOrdersPage() {
               typeof order.customerRating === "number"
                 ? `${order.customerRating.toFixed(1)} / 5`
                 : t("noRating");
+            const timeSummary = formatDateTime(order.confirmedServiceTime || order.appointmentTime);
+            const addressFull = order.serviceAddress?.address?.trim() || "";
+            const addressShort =
+              addressFull.length > 32 ? `${addressFull.slice(0, 32)}…` : addressFull || t("unknown");
 
             return (
-              <article className="merchant-order-card" key={order.orderNo}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      {order.orderNo}
+              <article className="merchant-order-card merchant-order-card--compact" key={order.orderNo}>
+                <div className="flex gap-2.5">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)",
+                      color: "var(--primary)"
+                    }}
+                  >
+                    {(order.customerName || "?").slice(0, 1)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
+                          {order.orderNo}
+                        </p>
+                        <h3 className="mt-0.5 text-[15px] font-semibold leading-snug">
+                          {order.serviceTitle || order.serviceType || t("unknown")}
+                        </h3>
+                        {order.serviceSubtitle ? (
+                          <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
+                            {order.serviceSubtitle}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span
+                          className="merchant-status-chip py-0.5 text-[11px]"
+                          style={{
+                            backgroundColor: awaitingStart ? "#fff7ed" : "#e8f2ff",
+                            color: awaitingStart ? "#c2410c" : "#2256c5"
+                          }}
+                        >
+                          {awaitingStart ? t("badgeAwaitingStart") : getWorkflowLabel(currentWorkflow)}
+                        </span>
+                        <span className="merchant-price-pill py-1 text-[13px]">{displayAmount || t("unknown")}</span>
+                      </div>
+                    </div>
+                    <p className="merchant-order-compact-meta mt-1.5 text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+                      <span className="font-medium" style={{ color: "var(--text)" }}>
+                        {order.customerName || t("unknown")}
+                      </span>
+                      <span style={{ color: "var(--border)" }}> · </span>
+                      <span>{timeSummary}</span>
+                      <span style={{ color: "var(--border)" }}> · </span>
+                      <span>{addressShort}</span>
                     </p>
-                    <h3 className="mt-1 text-lg font-semibold">
-                      {order.serviceTitle || order.serviceType || t("unknown")}
-                    </h3>
-                    {order.serviceSubtitle ? (
-                      <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                        {order.serviceSubtitle}
+                  </div>
+                </div>
+
+                <details className="merchant-order-details mt-2.5 rounded-xl border px-2.5 py-1.5" style={{ borderColor: "var(--border)" }}>
+                  <summary
+                    className="cursor-pointer text-xs font-medium outline-none [&::-webkit-details-marker]:hidden"
+                    style={{ color: "var(--primary)", listStyle: "none" }}
+                  >
+                    {t("orderDetails")}
+                  </summary>
+                  <div className="merchant-order-detail-rows mt-2 border-t pt-2" style={{ borderColor: "var(--border)" }}>
+                    <div>
+                      <p className="field-label">{t("customerInfo")}</p>
+                      <p className="text-sm font-semibold">{order.customerName || t("unknown")}</p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
+                        {t("customerRating")}: {customerRating} · {t("customerLevel")}: {order.customerLevel || t("unknown")} ·{" "}
+                        {t("completedOrders")}: {order.completedOrderCount ?? 0}
                       </p>
-                    ) : null}
+                    </div>
+                    <div>
+                      <p className="field-label">{t("serviceAddress")}</p>
+                      <p className="text-sm">{order.serviceAddress?.address || t("unknown")}</p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
+                        {t("distanceKm")}: {order.distanceKm != null ? `${order.distanceKm} km` : t("unknown")}
+                      </p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
+                        {t("appointmentTime")}: {formatDateTime(order.appointmentTime)} · {t("confirmedServiceTime")}:{" "}
+                        {formatDateTime(order.confirmedServiceTime)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="field-label">{t("quotedAmount")}</p>
+                      <p className="text-sm font-semibold">{displayAmount || t("unknown")}</p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
+                        {t("orderCreatedAt")}: {formatDateTime(order.createdAt)} · {t("remark")}: {order.remark || t("unknown")}
+                      </p>
+                    </div>
+                    <div className="space-y-0.5 text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>
+                      <p>{t("paymentFrozenHint")}</p>
+                      <p>{t("reviewHint")}</p>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="merchant-status-chip" style={{ backgroundColor: "#e8f2ff", color: "#2256c5" }}>
-                      {getWorkflowLabel(currentWorkflow)}
-                    </span>
-                    <span className="merchant-price-pill">{displayAmount || t("unknown")}</span>
-                  </div>
-                </div>
-
-                <div className="merchant-order-info-grid mt-4">
-                  <div className="merchant-order-info-card">
-                    <p className="field-label">{t("customerInfo")}</p>
-                    <p className="font-semibold">{order.customerName || t("unknown")}</p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("customerRating")}: {customerRating}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("customerLevel")}: {order.customerLevel || t("unknown")}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("completedOrders")}: {order.completedOrderCount ?? 0}
-                    </p>
-                  </div>
-
-                  <div className="merchant-order-info-card">
-                    <p className="field-label">{t("serviceAddress")}</p>
-                    <p className="text-sm">{order.serviceAddress?.address || t("unknown")}</p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("distanceKm")}: {order.distanceKm != null ? `${order.distanceKm} km` : t("unknown")}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("appointmentTime")}: {formatDateTime(order.appointmentTime)}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("confirmedServiceTime")}: {formatDateTime(order.confirmedServiceTime)}
-                    </p>
-                  </div>
-
-                  <div className="merchant-order-info-card">
-                    <p className="field-label">{t("quotedAmount")}</p>
-                    <p className="font-semibold">{displayAmount || t("unknown")}</p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("orderCreatedAt")}: {formatDateTime(order.createdAt)}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                      {t("remark")}: {order.remark || t("unknown")}
-                    </p>
-                  </div>
-                </div>
+                </details>
 
                 {showScheduleEditor ? (
-                  <div className="merchant-order-action-panel mt-4">
+                  <div className="merchant-order-action-panel merchant-order-action-panel--compact mt-2.5">
                     <div>
                       <label className="field-label">{t("confirmedServiceTime")}</label>
                       <input
@@ -504,7 +642,7 @@ export default function MerchantOrdersPage() {
                 ) : null}
 
                 {showInServiceReschedule ? (
-                  <div className="merchant-order-action-panel mt-4">
+                  <div className="merchant-order-action-panel merchant-order-action-panel--compact mt-2.5">
                     <div>
                       <label className="field-label">{t("confirmedServiceTime")}</label>
                       <input
@@ -531,7 +669,7 @@ export default function MerchantOrdersPage() {
                   </div>
                 ) : null}
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-2.5 flex flex-wrap gap-2">
                   {showScheduleEditor ? (
                     <button className="apple-btn-primary" onClick={() => updateStatus(order, "merchantConfirmed")} type="button">
                       {order.confirmedServiceTime ? t("updateSchedule") : t("saveSchedule")}
@@ -562,11 +700,6 @@ export default function MerchantOrdersPage() {
                       {t("actions.cancelled")}
                     </button>
                   ) : null}
-                </div>
-
-                <div className="mt-3 space-y-1 text-xs" style={{ color: "var(--muted)" }}>
-                  <p>{t("paymentFrozenHint")}</p>
-                  <p>{t("reviewHint")}</p>
                 </div>
               </article>
             );

@@ -401,6 +401,36 @@ a {
   padding: 14px;
 }
 
+.merchant-order-card--compact {
+  padding: 12px 14px;
+}
+
+.merchant-order-compact-meta {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.merchant-order-details summary {
+  list-style: none;
+}
+
+.merchant-order-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.merchant-order-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.merchant-order-action-panel--compact {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
 .merchant-order-info-grid,
 .merchant-order-action-panel {
   display: grid;

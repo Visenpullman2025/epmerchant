@@ -187,6 +187,9 @@
     "heroAlt": "商家订单中心视觉图",
     "title": "在线订单管理",
     "subtitle": "按状态管理订单，确认上门时间后等待客户付款冻结，完单后再结算与互评。",
+    "subtitleInService": "进行中的订单，以及客户已付款、等待你点击「开始服务」的订单，都会出现在此。",
+    "orderDetails": "展开详情",
+    "badgeAwaitingStart": "已付款·待开始服务",
     "live": "实时同步",
     "tabs": {
       "new": "新订单",

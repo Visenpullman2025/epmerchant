@@ -187,6 +187,9 @@
     "heroAlt": "Merchant order center visual",
     "title": "Live Order Management",
     "subtitle": "Confirm on-site service time, wait for customer payment hold, then settle after both sides confirm completion.",
+    "subtitleInService": "In-progress jobs and paid orders waiting for you to tap “Start service” appear here.",
+    "orderDetails": "Show details",
+    "badgeAwaitingStart": "Paid · start service",
     "live": "Live sync",
     "tabs": {
       "new": "New",
