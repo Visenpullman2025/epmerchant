@@ -7,6 +7,8 @@ type MerchantScaffoldProps = {
   heroSrc: string;
   heroAlt: string;
   topRight?: React.ReactNode;
+  /** 渲染在主内容卡之外（如固定底栏），避免与 `.apple-card` 同层滚动 */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -17,6 +19,7 @@ export default function MerchantScaffold({
   heroSrc,
   heroAlt,
   topRight,
+  footer,
   children
 }: MerchantScaffoldProps) {
   return (
@@ -37,6 +40,7 @@ export default function MerchantScaffold({
         ) : null}
         {children}
       </section>
+      {footer ? footer : null}
     </main>
   );
 }

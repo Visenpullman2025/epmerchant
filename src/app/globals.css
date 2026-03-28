@@ -15,6 +15,9 @@
   --warn: #eab308;
   --danger: #ef4444;
   --topbar-bg: rgba(255, 255, 255, 0.7);
+  /* 与客户端 expath 泰国旗点缀色一致，用于个人中心菜单图标 */
+  --thai-red: #b42338;
+  --thai-blue: #1e3f73;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,6 +36,8 @@
     --warn: #f59e0b;
     --danger: #f87171;
     --topbar-bg: rgba(12, 19, 38, 0.52);
+    --thai-red: #c93d52;
+    --thai-blue: #4a7fd4;
   }
 }
 
@@ -57,7 +62,9 @@ a {
   max-width: 640px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 16px 14px 56px;
+  padding: 16px 14px;
+  /* 为固定底栏留出空间，避免正文被遮挡 */
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }
 
 .apple-card {
@@ -352,6 +359,162 @@ a {
   border: 1px solid var(--border);
 }
 
+.merchant-price-item-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 94%, #ffffff);
+  padding: 12px;
+}
+
+.merchant-price-item-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.merchant-static-field {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--border) 36%, transparent);
+  color: var(--text);
+  padding: 0 13px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.merchant-price-summary {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 94%, #ffffff);
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.merchant-order-card {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 94%, #ffffff);
+  padding: 14px;
+}
+
+.merchant-order-info-grid,
+.merchant-order-action-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.merchant-order-info-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 96%, #ffffff);
+  padding: 12px;
+}
+
+.merchant-upload-preview {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 94%, #ffffff);
+  text-align: left;
+}
+
+.merchant-upload-preview:disabled {
+  opacity: 0.7;
+}
+
+.merchant-upload-preview-media,
+.merchant-upload-preview-file {
+  position: relative;
+  min-height: 96px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.merchant-upload-preview-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.merchant-upload-preview-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.merchant-upload-preview-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.merchant-upload-preview-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.merchant-preview-dialog {
+  width: min(92vw, 760px);
+  max-width: 760px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0;
+  background: var(--card-bg);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.32);
+}
+
+.merchant-preview-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(4px);
+}
+
+.merchant-preview-dialog-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.merchant-preview-stage {
+  position: relative;
+  width: 100%;
+  min-height: min(72vh, 560px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 92%, #ffffff);
+}
+
+.merchant-preview-frame {
+  width: 100%;
+  min-height: min(72vh, 560px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.merchant-preview-file-fallback {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 18px;
+  background: color-mix(in srgb, var(--card-bg) 92%, #ffffff);
+}
+
 @media (max-width: 640px) {
   .merchant-service-card {
     grid-template-columns: 1fr;
@@ -363,7 +526,14 @@ a {
 
   .merchant-toggle-grid,
   .merchant-gallery-grid,
-  .merchant-service-meta {
+  .merchant-service-meta,
+  .merchant-order-info-grid,
+  .merchant-order-action-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .merchant-price-item-grid,
+  .merchant-upload-preview {
     grid-template-columns: 1fr;
   }
 
@@ -373,19 +543,109 @@ a {
   }
 }
 
+/* 商家个人中心：对齐客户端 me 页分组列表 */
+.merchant-profile-hub-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 92%, var(--primary) 8%);
+  padding: 16px 14px;
+}
+
+.merchant-profile-menu-section-title {
+  margin: 0 0 6px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.merchant-profile-menu-panel {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-bg) 96%, transparent);
+}
+
+.merchant-profile-menu-row {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background-color 0.15s ease;
+}
+
+.merchant-profile-menu-row:hover {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+
+.merchant-profile-menu-row:active {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+.merchant-profile-menu-row + .merchant-profile-menu-row {
+  border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.merchant-profile-menu-row-icon {
+  display: flex;
+  height: 36px;
+  width: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.merchant-profile-menu-row-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.merchant-profile-menu-row-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.merchant-bottom-nav-shell {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 0 14px max(10px, env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.merchant-bottom-nav-shell .merchant-bottom-nav {
+  pointer-events: auto;
+}
+
 .merchant-bottom-nav {
-  position: sticky;
-  bottom: 8px;
-  z-index: 40;
-  margin-top: 14px;
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin-top: 0;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
   background: var(--topbar-bg);
-  backdrop-filter: blur(8px);
-  border-radius: 14px;
-  padding: 8px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+  padding: 10px 8px 12px;
 }
 
 .merchant-bottom-nav-item {

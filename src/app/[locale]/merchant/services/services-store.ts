@@ -19,6 +19,9 @@ export type MerchantServiceCard = {
   priceMax: number;
   published: boolean;
   visible: boolean;
+  reviewState?: "pending" | "approved" | "rejected";
+  reviewNote?: string;
+  status?: string;
 };
 
 export type MerchantServicePriceDraft = {
@@ -130,7 +133,11 @@ export function formatPriceRange(priceMin: number, priceMax: number, unit = "") 
 export function normalizeServiceCard(item: MerchantServiceProjectItem): MerchantServiceCard {
   const subtitle = item.processTemplateName || item.categoryName || item.categoryCode;
   const visible = item.isOpen !== false;
-  const published = item.status !== "draft";
+  const reviewState =
+    item.reviewState === "approved" || item.reviewState === "rejected" || item.reviewState === "pending"
+      ? item.reviewState
+      : undefined;
+  const published = reviewState ? reviewState === "approved" : item.status !== "draft";
   return {
     id: item.id,
     title: item.title,
@@ -141,7 +148,10 @@ export function normalizeServiceCard(item: MerchantServiceProjectItem): Merchant
     priceMin: item.priceMin,
     priceMax: item.priceMax,
     published,
-    visible
+    visible,
+    reviewState,
+    reviewNote: item.reviewNote,
+    status: item.status
   };
 }
 

@@ -259,6 +259,7 @@ export default function MerchantServiceDetailPage() {
   return (
     <MerchantScaffold
       brand={t("brand")}
+      footer={<MerchantBottomNav locale={locale} />}
       heroAlt={t("heroAlt")}
       heroSrc="/images/merchant-dashboard-hero.svg"
       subtitle={t("detailSubtitle")}
@@ -303,6 +304,17 @@ export default function MerchantServiceDetailPage() {
               <label className="field-label">{t("serviceDescription")}</label>
               <textarea className="field-textarea" value={service.description} onChange={(e) => update({ description: e.target.value })} />
             </div>
+          </div>
+        </div>
+
+        <div className="merchant-editor-section">
+          <h2 className="text-base font-semibold">{t("priceRangeTitle")}</h2>
+          {templateLoading ? (
+            <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
+              {t("loading")}
+            </p>
+          ) : null}
+          <div className="mt-3 space-y-3">
             <div>
               <label className="field-label">{t("templateCode")}</label>
               <select className="field-select" value={service.processTemplateCode} onChange={(e) => onTemplateChange(e.target.value)}>
@@ -314,64 +326,49 @@ export default function MerchantServiceDetailPage() {
                 ))}
               </select>
             </div>
-          </div>
-        </div>
-
-        <div className="merchant-editor-section">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">{t("priceRangeTitle")}</h2>
-          </div>
-          {templateLoading ? (
-            <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-              {t("loading")}
-            </p>
-          ) : null}
-          <div className="mt-3 space-y-3">
             {service.priceItems.map((item, index) => (
-              <div className="merchant-sku-card" key={item.id}>
-                <div className="grid grid-cols-[1fr_auto] gap-3">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="field-label">{t("priceLabel")}</label>
-                      {item.readonly ? (
-                        <div className="rounded-xl border px-4 py-3 text-sm font-medium" style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-                          {item.label || `${t("skuLabel")} ${index + 1}`}
-                        </div>
-                      ) : (
-                        <input className="field-input" value={item.label} onChange={(e) => updatePriceItem(item.id, { label: e.target.value })} placeholder={`${t("skuLabel")} ${index + 1}`} />
-                      )}
-                    </div>
-                    <div>
-                      <label className="field-label">{t("priceAmount")}</label>
-                      {item.inputType === "select" ? (
-                        <select
-                          className="field-select"
-                          value={item.amount}
-                          onChange={(e) => updatePriceItem(item.id, { amount: e.target.value })}
-                        >
-                          <option value="">{t("selectFieldOption")}</option>
-                          {(item.options || []).map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          className="field-input"
-                          type={item.inputType === "text" ? "text" : "number"}
-                          min={item.inputType === "number" ? "0" : undefined}
-                          step={item.inputType === "number" ? "0.01" : undefined}
-                          value={item.amount}
-                          onChange={(e) => updatePriceItem(item.id, { amount: e.target.value })}
-                        />
-                      )}
-                    </div>
+              <div className="merchant-price-item-card" key={item.id}>
+                <div className="merchant-price-item-grid">
+                  <div>
+                    <label className="field-label">{t("priceLabel")}</label>
+                    {item.readonly ? (
+                      <div className="merchant-static-field">
+                        {item.label || `${t("skuLabel")} ${index + 1}`}
+                      </div>
+                    ) : (
+                      <input className="field-input" value={item.label} onChange={(e) => updatePriceItem(item.id, { label: e.target.value })} placeholder={`${t("skuLabel")} ${index + 1}`} />
+                    )}
+                  </div>
+                  <div>
+                    <label className="field-label">{t("priceAmount")}</label>
+                    {item.inputType === "select" ? (
+                      <select
+                        className="field-select"
+                        value={item.amount}
+                        onChange={(e) => updatePriceItem(item.id, { amount: e.target.value })}
+                      >
+                        <option value="">{t("selectFieldOption")}</option>
+                        {(item.options || []).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        className="field-input"
+                        type={item.inputType === "text" ? "text" : "number"}
+                        min={item.inputType === "number" ? "0" : undefined}
+                        step={item.inputType === "number" ? "0.01" : undefined}
+                        value={item.amount}
+                        onChange={(e) => updatePriceItem(item.id, { amount: e.target.value })}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             ))}
-            <div className="rounded-xl border p-3 text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
+            <div className="merchant-price-summary">
               {t("computedRange", {
                 min: computedPrice.priceMin,
                 max: computedPrice.priceMax
@@ -438,7 +435,6 @@ export default function MerchantServiceDetailPage() {
           {serviceId === "new" ? t("createService") : t("updateService")}
         </button>
       </div>
-      <MerchantBottomNav locale={locale} />
     </MerchantScaffold>
   );
 }

@@ -6,13 +6,16 @@ type ProxyOptions = {
   path: string;
   method: "GET" | "POST" | "PUT";
   body?: unknown;
+  /** 追加到上游请求（如 Accept-Language） */
+  extraHeaders?: Record<string, string>;
 };
 
 export async function proxyToBackend({
   req,
   path,
   method,
-  body
+  body,
+  extraHeaders
 }: ProxyOptions) {
   const cookieToken = req.cookies.get("merchant_token")?.value || "";
   const headerToken = req.headers.get("x-merchant-token") || "";
@@ -30,7 +33,8 @@ export async function proxyToBackend({
       cookie: req.headers.get("cookie") || "",
       "x-request-id": req.headers.get("x-request-id") || "",
       ...(authorization ? { Authorization: authorization } : {}),
-      ...(token ? { "X-Merchant-Token": token.replace(/^Bearer\s+/i, "") } : {})
+      ...(token ? { "X-Merchant-Token": token.replace(/^Bearer\s+/i, "") } : {}),
+      ...(extraHeaders || {})
     },
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store"

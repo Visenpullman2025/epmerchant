@@ -8,27 +8,40 @@ type MerchantBottomNavProps = {
   locale: string;
 };
 
-const navItems = ["dashboard", "orders", "services", "wallet", "profile"] as const;
+const navItems = ["dashboard", "orders", "services", "square", "profile"] as const;
+
+function navHref(locale: string, item: (typeof navItems)[number]) {
+  return `/${locale}/merchant/${item}`;
+}
+
+function isNavActive(pathname: string, locale: string, item: (typeof navItems)[number]) {
+  const href = navHref(locale, item);
+  if (item === "square") return pathname.startsWith(`/${locale}/merchant/square`);
+  if (item === "profile") return pathname.startsWith(`/${locale}/merchant/profile`);
+  return pathname === href;
+}
 
 export default function MerchantBottomNav({ locale }: MerchantBottomNavProps) {
   const pathname = usePathname();
   const t = useTranslations("MerchantNav");
 
   return (
-    <nav className="merchant-bottom-nav">
-      {navItems.map((item) => {
-        const href = `/${locale}/merchant/${item}`;
-        const active = pathname === href;
-        return (
-          <Link
-            className={`merchant-bottom-nav-item ${active ? "active" : ""}`}
-            href={href}
-            key={item}
-          >
-            {t(item)}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className="merchant-bottom-nav-shell">
+      <nav className="merchant-bottom-nav">
+        {navItems.map((item) => {
+          const href = navHref(locale, item);
+          const active = isNavActive(pathname, locale, item);
+          return (
+            <Link
+              className={`merchant-bottom-nav-item ${active ? "active" : ""}`}
+              href={href}
+              key={item}
+            >
+              {t(item)}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

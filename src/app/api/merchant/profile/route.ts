@@ -133,6 +133,28 @@ export async function GET() {
             (typeof verificationRaw.idNumber === "string" && verificationRaw.idNumber) ||
             (typeof verificationRaw.id_number === "string" && verificationRaw.id_number) ||
             undefined,
+          businessLicenseUrl:
+            (typeof verificationRaw.businessLicenseUrl === "string" &&
+              verificationRaw.businessLicenseUrl) ||
+            (typeof verificationRaw.business_license_url === "string" &&
+              verificationRaw.business_license_url) ||
+            undefined,
+          documentFrontUrl:
+            (typeof verificationRaw.documentFrontUrl === "string" &&
+              verificationRaw.documentFrontUrl) ||
+            (typeof verificationRaw.document_front_url === "string" &&
+              verificationRaw.document_front_url) ||
+            undefined,
+          documentBackUrl:
+            (typeof verificationRaw.documentBackUrl === "string" &&
+              verificationRaw.documentBackUrl) ||
+            (typeof verificationRaw.document_back_url === "string" &&
+              verificationRaw.document_back_url) ||
+            undefined,
+          selfieUrl:
+            (typeof verificationRaw.selfieUrl === "string" && verificationRaw.selfieUrl) ||
+            (typeof verificationRaw.selfie_url === "string" && verificationRaw.selfie_url) ||
+            undefined,
           status:
             verificationRaw.status === "approved" ||
             verificationRaw.status === "rejected" ||

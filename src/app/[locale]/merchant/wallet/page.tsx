@@ -65,6 +65,7 @@ export default function MerchantWalletPage() {
   return (
     <MerchantScaffold
       brand={t("brand")}
+      footer={<MerchantBottomNav locale={locale} />}
       heroAlt={t("heroAlt")}
       heroSrc="/images/merchant-dashboard-hero.svg"
       subtitle={t("subtitle")}
@@ -91,7 +92,7 @@ export default function MerchantWalletPage() {
             {submitting ? t("submitting") : t("submit")}
           </button>
         </div>
-        <div className="rounded-xl border p-3" style={{ borderColor: "var(--border)" }}>
+        <div className="rounded-xl border p-3" id="wallet-records" style={{ borderColor: "var(--border)" }}>
           <p className="text-sm font-semibold">{t("recentRecords")}</p>
           <ul className="mt-2 space-y-2 text-sm" style={{ color: "var(--muted)" }}>
             {records.length ? (
@@ -102,7 +103,6 @@ export default function MerchantWalletPage() {
           </ul>
         </div>
       </div>
-      <MerchantBottomNav locale={locale} />
     </MerchantScaffold>
   );
 }

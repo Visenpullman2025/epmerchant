@@ -2,17 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import MerchantAvailabilityCalendar from "@/components/merchant/MerchantAvailabilityCalendar";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import { buildBackendUrl } from "@/lib/api/backend";
-import type {
-  ApiError,
-  ApiSuccess,
-  MerchantOrderItem,
-  MerchantOrdersResponse,
-  MerchantProfileResponse,
-  MerchantServiceProjectItem,
-  MerchantServicesResponse
-} from "@shared/api/contracts/merchant-api";
+import type { ApiError, ApiSuccess, MerchantOrderItem, MerchantOrdersResponse } from "@shared/api/contracts/merchant-api";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -22,10 +15,7 @@ export default async function MerchantDashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("MerchantDashboard");
   const token = (await cookies()).get("merchant_token")?.value;
-  let verificationStatus: "unsubmitted" | "pending" | "approved" | "rejected" = "unsubmitted";
-  let serviceList: MerchantServiceProjectItem[] = [];
   let orderList: MerchantOrderItem[] = [];
-  let boundServiceCategories: MerchantProfileResponse["boundServiceCategories"] = [];
 
   async function fetchMerchant<T>(path: string): Promise<T | null> {
     if (!token) return null;
@@ -50,14 +40,7 @@ export default async function MerchantDashboardPage({ params }: Props) {
   }
 
   if (token) {
-    const [profile, services, orders] = await Promise.all([
-      fetchMerchant<MerchantProfileResponse>("/api/v1/merchant/profile"),
-      fetchMerchant<MerchantServicesResponse>("/api/v1/merchant/services"),
-      fetchMerchant<MerchantOrdersResponse>("/api/v1/merchant/orders?page=1&pageSize=100")
-    ]);
-    verificationStatus = profile?.verification?.status || "unsubmitted";
-    boundServiceCategories = profile?.boundServiceCategories || [];
-    serviceList = services?.list || [];
+    const orders = await fetchMerchant<MerchantOrdersResponse>("/api/v1/merchant/orders?page=1&pageSize=100");
     orderList = orders?.list || [];
   }
 
@@ -68,9 +51,6 @@ export default async function MerchantDashboardPage({ params }: Props) {
   const completedRevenue = orderList
     .filter((item) => item.status === "done")
     .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalServices = serviceList.length;
-  const publishedServices = serviceList.filter((item) => item.status !== "draft").length;
-  const hiddenServices = serviceList.filter((item) => item.isOpen === false).length;
 
   return (
     <main className="app-shell">
@@ -119,99 +99,7 @@ export default async function MerchantDashboardPage({ params }: Props) {
           </div>
         </article>
 
-        <article className="apple-card">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">{t("identityTitle")}</h2>
-            <span
-              className="merchant-status-chip"
-              style={{
-                backgroundColor:
-                  verificationStatus === "approved"
-                    ? "var(--ok)"
-                    : verificationStatus === "rejected"
-                      ? "var(--danger)"
-                      : verificationStatus === "pending"
-                        ? "var(--warn)"
-                        : "#eef2ff",
-                color: verificationStatus === "unsubmitted" ? "#5f6e8f" : "#fff"
-              }}
-            >
-              {verificationStatus === "approved"
-                ? t("verified")
-                : verificationStatus === "rejected"
-                  ? t("rejected")
-                  : verificationStatus === "pending"
-                    ? t("pending")
-                    : t("unsubmitted")}
-            </span>
-          </div>
-          <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-            {verificationStatus === "approved"
-              ? t("identityDesc")
-              : verificationStatus === "rejected"
-                ? t("identityRejectedDesc")
-                : verificationStatus === "pending"
-                  ? t("identityPendingDesc")
-                  : t("identityUnsubmittedDesc")}
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/profile`}>
-              {t("viewIdentity")}
-            </Link>
-            <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/profile`}>
-              {t("updateDocuments")}
-            </Link>
-          </div>
-        </article>
-
-        <article className="apple-card">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">{t("serviceTitle")}</h2>
-            <span className="merchant-status-chip" style={{ backgroundColor: "color-mix(in srgb, var(--primary) 18%, transparent)", color: "var(--primary)" }}>
-              {t("serviceSummary", { count: totalServices })}
-            </span>
-          </div>
-          <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-            {t("serviceDesc")}
-          </p>
-          <div className="merchant-kpi mt-4">
-            <div className="merchant-kpi-card">
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {t("publishedCount")}
-              </p>
-              <p className="mt-1 text-lg font-semibold">{publishedServices}</p>
-            </div>
-            <div className="merchant-kpi-card">
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {t("hiddenCount")}
-              </p>
-              <p className="mt-1 text-lg font-semibold">{hiddenServices}</p>
-            </div>
-            <div className="merchant-kpi-card">
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {t("boundCategories")}
-              </p>
-              <p className="mt-1 text-lg font-semibold">{boundServiceCategories.length}</p>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(boundServiceCategories || []).map((service, index) => (
-              <span
-                className="merchant-status-chip"
-                key={service.code}
-                style={{
-                  backgroundColor: index === 0 ? "#e8f2ff" : index === 1 ? "#e9f9f0" : "#f2ecff",
-                  color: index === 0 ? "#2256c5" : index === 1 ? "#0f8f4c" : "#6542cf"
-                }}
-              >
-                {service.name}
-              </span>
-            ))}
-          </div>
-          <Link className="apple-btn-primary mt-3 inline-flex items-center justify-center" href={`/${locale}/merchant/services`}>
-            {t("manageServices")}
-          </Link>
-        </article>
+        <MerchantAvailabilityCalendar locale={locale} />
 
         <article className="apple-card">
           <div className="flex items-center justify-between">
