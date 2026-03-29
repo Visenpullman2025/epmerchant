@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import type { ApiError, ApiSuccess } from "@shared/api/contracts/merchant-api";
+import type { ApiError, ApiSuccess } from "@/lib/api/merchant-api";
 import { buildBackendUrl, requestIdFrom } from "@/lib/api/backend";
 import { apiError, apiSuccess } from "@/lib/api/contract-response";
 

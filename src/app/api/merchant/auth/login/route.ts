@@ -4,7 +4,7 @@ import type {
   LocaleCode,
   LoginRequest,
   LoginResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 import { apiError, apiSuccess } from "@/lib/api/contract-response";
 import { buildBackendUrl } from "@/lib/api/backend";
 import {

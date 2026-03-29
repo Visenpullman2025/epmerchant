@@ -1,3 +1,7 @@
+/**
+ * 兼容旧版：`POST .../transition` + `targetStatus`。
+ * 新实现请用 `confirm` / `start-service` / `finish-service` / `cancel`（见 shared/docs/frontend-api-renames.md）。
+ */
 import { NextRequest } from "next/server";
 import { proxyToBackend } from "@/lib/api/proxy";
 

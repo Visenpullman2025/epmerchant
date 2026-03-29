@@ -7,12 +7,12 @@ import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import { getJson, postJson } from "@/lib/merchant/auth-client";
 import type {
+  MerchantOrderActionRequest,
+  MerchantOrderActionResponse,
   MerchantOrderItem,
   MerchantOrderStatus,
-  MerchantOrderTransitionRequest,
-  MerchantOrderTransitionResponse,
   MerchantOrdersResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 
 const statuses: MerchantOrderStatus[] = ["new", "pending", "inService", "done", "cancelled"];
 
@@ -371,16 +371,27 @@ export default function MerchantOrdersPage() {
       return;
     }
 
-    const payload: MerchantOrderTransitionRequest = {
-      targetStatus: nextStatus,
-      confirmedServiceTime: confirmedServiceTime || undefined,
-      merchantNote: merchantNotes[order.orderNo]?.trim() || undefined
-    };
+    const note = merchantNotes[order.orderNo]?.trim() || undefined;
+    let path: string;
+    let payload: MerchantOrderActionRequest;
 
-    const result = await postJson<MerchantOrderTransitionResponse>(
-      `/api/merchant/orders/${order.orderNo}/transition`,
-      payload
-    );
+    if (nextStatus === "merchantConfirmed") {
+      path = `/api/merchant/orders/${order.orderNo}/confirm`;
+      payload = { confirmedServiceTime: confirmedServiceTime || undefined, merchantNote: note };
+    } else if (nextStatus === "inService") {
+      path = `/api/merchant/orders/${order.orderNo}/start-service`;
+      payload = { confirmedServiceTime: confirmedServiceTime || undefined, merchantNote: note };
+    } else if (nextStatus === "merchantDone") {
+      path = `/api/merchant/orders/${order.orderNo}/finish-service`;
+      payload = { merchantNote: note };
+    } else if (nextStatus === "cancelled") {
+      path = `/api/merchant/orders/${order.orderNo}/cancel`;
+      payload = {};
+    } else {
+      return;
+    }
+
+    const result = await postJson<MerchantOrderActionResponse>(path, payload);
     if (!result.ok) {
       setMessageTone("error");
       setMessage(result.message);

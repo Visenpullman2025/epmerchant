@@ -16,7 +16,7 @@ import MerchantVerificationUploadField, {
 import type {
   MerchantProfileResponse,
   MerchantVerificationResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 
 type VerificationUploadScene =
   | "businessLicense"

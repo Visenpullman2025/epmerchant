@@ -7,7 +7,7 @@ import { getJson } from "@/lib/merchant/auth-client";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantProfileMenuRow from "@/components/merchant/MerchantProfileMenuRow";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
-import type { MerchantProfileResponse, MerchantWalletSummaryResponse } from "@shared/api/contracts/merchant-api";
+import type { MerchantProfileResponse, MerchantWalletSummaryResponse } from "@/lib/api/merchant-api";
 
 const THAI_RED = "var(--thai-red)";
 const THAI_BLUE = "var(--thai-blue)";

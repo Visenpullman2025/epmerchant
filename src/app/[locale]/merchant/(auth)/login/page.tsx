@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { postJson } from "@/lib/merchant/auth-client";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
-import type { LoginResponse } from "@shared/api/contracts/merchant-api";
+import type { LoginResponse } from "@/lib/api/merchant-api";
 
 export default function MerchantLoginPage() {
   const t = useTranslations("MerchantAuth");

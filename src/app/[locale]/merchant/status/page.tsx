@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import { buildBackendUrl } from "@/lib/api/backend";
 import { normalizeMerchantReviewStatus } from "@/lib/merchant/verification-status";
-import type { ApiSuccess } from "@shared/api/contracts/merchant-api";
+import type { ApiSuccess } from "@/lib/api/merchant-api";
 
 type Props = {
   params: Promise<{ locale: string }>;

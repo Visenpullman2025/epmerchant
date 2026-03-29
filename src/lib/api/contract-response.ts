@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { ApiError, ApiErrorItem, ApiSuccess } from "@shared/api/contracts/merchant-api";
+import type { ApiError, ApiErrorItem, ApiSuccess } from "@/lib/api/merchant-api";
 
 function nowIso() {
   return new Date().toISOString();

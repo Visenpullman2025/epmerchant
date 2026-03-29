@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
-import type { ApiError, ApiSuccess } from "@shared/api/contracts/merchant-api";
-import type { MerchantProfileResponse } from "@shared/api/contracts/merchant-api";
+import type { ApiError, ApiSuccess } from "@/lib/api/merchant-api";
+import type { MerchantProfileResponse } from "@/lib/api/merchant-api";
 import { apiError, apiSuccess } from "@/lib/api/contract-response";
 import { buildBackendUrl } from "@/lib/api/backend";
 import { normalizeMerchantReviewStatus } from "@/lib/merchant/verification-status";

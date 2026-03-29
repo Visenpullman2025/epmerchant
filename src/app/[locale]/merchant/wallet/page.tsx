@@ -10,7 +10,7 @@ import type {
   MerchantWalletRecordsResponse,
   MerchantWalletSummaryResponse,
   MerchantWithdrawResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 
 export default function MerchantWalletPage() {
   const t = useTranslations("MerchantWallet");

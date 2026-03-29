@@ -29,7 +29,7 @@ import type {
   MerchantProfileResponse,
   MerchantServiceDetailResponse,
   MerchantServiceSaveResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 
 export default function MerchantServiceDetailPage() {
   const t = useTranslations("MerchantServices");

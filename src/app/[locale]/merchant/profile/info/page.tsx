@@ -12,7 +12,7 @@ import type {
   MerchantCategoriesResponse,
   MerchantProfileResponse,
   MerchantProfileUpdateResponse
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 import { normalizeCategories } from "../../services/services-store";
 
 export default function MerchantProfileInfoPage() {

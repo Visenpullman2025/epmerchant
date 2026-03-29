@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import { getJson } from "@/lib/merchant/auth-client";
-import type { MerchantProfileResponse, MerchantServicesResponse } from "@shared/api/contracts/merchant-api";
+import type { MerchantProfileResponse, MerchantServicesResponse } from "@/lib/api/merchant-api";
 import { normalizeServiceCard, type MerchantServiceCard } from "./services-store";
 
 export default function MerchantServicesPage() {
@@ -54,7 +54,7 @@ export default function MerchantServicesPage() {
   const listedServices = services.filter((item) => item.status !== "draft");
   const hasBoundCategories = boundCodes.length > 0;
   const summary = {
-    published: services.filter((item) => item.reviewState === "approved" || (!item.reviewState && item.published)).length,
+    published: services.filter((item) => item.published).length,
     promoted: 0,
     leads: listedServices.length
   };

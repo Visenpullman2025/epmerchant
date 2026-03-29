@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { postJson } from "@/lib/merchant/auth-client";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
-import type { SaveLocaleResponse } from "@shared/api/contracts/merchant-api";
+import type { SaveLocaleResponse } from "@/lib/api/merchant-api";
 
 export default function MerchantProfileSettingsPage() {
   const t = useTranslations("MerchantProfile");

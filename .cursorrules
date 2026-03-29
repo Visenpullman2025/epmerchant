@@ -6,40 +6,47 @@
 - 目标：在不破坏现有功能前提下，持续提升可用性、一致性与可维护性。
 
 ## 1. 共享单源入口（必须先读）
-- 每次任务必读（最小集）：
-  - `shared/docs/api-request.md`
-  - `shared/docs/api-list.md`
-- 关联任务存在时必读：
-  - `Linear` 对应任务、状态、最近更新
-- 按需读取（条件触发）：
-  - 只在用户明确要求时，再读本项目本地 docs 或历史文件
+- **本仓库（商家端）每次任务必读（最小集）**：
+  - `shared/docs/api-merchant-request.md`（商户需求与差异）
+  - `shared/docs/api-merchant-list.md`（商户接口状态与契约摘要）
+  - `shared/docs/project-flow.md`（端到端业务步骤与文档分工说明）
+  - `shared/docs/frontend-api-renames.md`（**前端/BFF 路径更名一览**，迁移与对接时必查）
+- **用户端 / 公共接口**（跨角色或联调 C 端时读）：
+  - `shared/docs/api-user-request.md`、`shared/docs/api-user-list.md`
+- **已弃用（仅保留重定向，禁止再当主入口、禁止再更新正文）**：
+  - ~~`shared/docs/api-request.md`~~ → 改用 **api-user-request** / **api-merchant-request**
+  - ~~`shared/docs/api-list.md`~~ → 改用 **api-user-list** / **api-merchant-list**
+- **Linear 已弃用**：不要求、不同步 Linear；进度与对后端的接口需求以 **本仓库 shared 文档与代码** 为准。
+- 按需读取（条件触发）：只在用户明确要求时，再读本项目本地 `docs/` 或其它历史文件
 - 本项目设计：`docs/stage2/design.md`
 
 ## 2. 日志与文档强制规则
-1. 开发前：先看 `shared/docs/api-request.md`、`shared/docs/api-list.md`，再看关联 `Linear` 任务。
-2. 新需求或完成更新：必须同步到对应 `Linear` 任务；没有对应任务就新建。
+1. 开发前：先读 **api-merchant-request**、**api-merchant-list**、**project-flow**；涉及路径迁移时再读 **frontend-api-renames**。
+2. **需要后端提供或变更商户 API 时**：必须把需求**发布到** `shared/docs/api-merchant-request.md`（见该文件「发布给后端」一节）；实现与联调结论同步到 **api-merchant-list.md**。**用户/公共接口**的需求写到 **api-user-request.md**。
 3. 若用户没有明确要求，不主动维护额外 shared 日志文件。
-4. 若需要补文字结论，优先回写 `api-request.md` 或 `api-list.md`，不要重新扩张 shared 目录。
+4. 若需要补文字结论：**商户相关**优先回写 `api-merchant-request.md` 或 `api-merchant-list.md`；**用户/公共**回写 `api-user-request.md` 或 `api-user-list.md`。不要重新扩张 shared 目录矩阵。
+5. **禁止**在已弃用的 `api-request.md`、`api-list.md` 中追加联调结论或需求（仅可在其顶部重定向区维护「指向新文件」的一句话）。
+6. **禁止**将「待后端实现」仅写在 issue/IM 而不回写 **api-merchant-request.md**（或对应的 **api-user-request.md**），以免协作失真。
 
 ## 3. API 协作闭环（前后端）
-1. 新需求、差异、待补接口边界，直接写 `shared/docs/api-request.md`。
-2. 接口状态、上下线边界，只写 `shared/docs/api-list.md`。
-3. 当前 shared 已收口，若接口细节未写明，以后端当前代码和联调结果为准。
-4. 新需求必须同步建到 `Linear`；完成更新必须同步回对应 `Linear` 任务。
-5. `Linear` 主要承担：新需求、完成更新、进度状态。
-6. 商家端页面/API 默认仅使用 `/api/v1/merchant/*`；若缺 merchant 对应接口，先在 `api-request.md` 补需求，禁止直接复用用户端 `/api/v1/auth/*`、`/api/v1/me/*`。
+1. **商户端**新需求、差异、待补接口边界 → `shared/docs/api-merchant-request.md`。
+2. **商户端**接口状态、上下线边界 → `shared/docs/api-merchant-list.md`。
+3. **用户端 / 公共**需求与清单 → `api-user-request.md` / `api-user-list.md`。
+4. **BFF/前端路径更名、旧路径停用** → 以 `shared/docs/frontend-api-renames.md` 为准；新页面**禁止**沿用表中「旧路径」。
+5. 若契约细节未写明，以后端当前代码和联调结果为唯一事实源。
+6. 商家端页面与 BFF 默认仅代理 **`/api/v1/merchant/*`**；若缺 merchant 对应接口，先在 **api-merchant-request.md** 补需求，禁止直接复用用户端 `/api/v1/auth/*`、`/api/v1/me/*` 等替代商户契约。
 7. 参数命名以后端当前代码和联调结果为唯一事实源：前端禁止自造字段名、禁止猜测别名。
-8. 若发现 shared 缺少统一契约说明，先在 `api-request.md` 标注差异，再要求后端明确，不自行猜字段。
+8. 若发现 shared 缺少统一契约说明，先在对应 **api-*-request.md** 标注差异，再要求后端明确，不自行猜字段。
 
 ## 3.1 工具优先工作流
-1. 当前默认采用“本地极简 shared”模式，不再依赖 `Apifox`、`Scalar`、额外共享流程文件。
-2. shared 当前只把 `api-request.md`、`api-list.md` 作为主入口。
+1. 当前默认采用「本地极简 shared」模式，不再依赖 `Apifox`、`Scalar`、额外重型流程文件。
+2. shared **主入口**按角色拆分：**商户** = `api-merchant-request` + `api-merchant-list`；**用户/公共** = `api-user-request` + `api-user-list`；**全员路径迁移** = `frontend-api-renames`；**流程口径** = `project-flow`。
 3. 若用户未明确要求，不要再扩展 shared 文档矩阵。
 
 ## 4. 禁止事项
 - 禁止未更新日志就宣称任务完成。
 - 禁止自行恢复被下线的重型 shared 流程。
 - 禁止跨项目改写他人的历史日志条目。
-- 禁止仅凭 shared 文档、命名推测或前端需要，自行新增后端接口代理、返回字段、类型契约或联调链路。
-- 若联调时发现“文档写了但后端实际没有”或“后端当前返回里没有该字段/接口”，以前端实际请求结果和后端当前代码为准，必须先向用户说明，再决定是回退实现还是在 `api-request.md` 标注差异。
-- 未经用户明确确认，不允许为了“先跑通页面”继续添加假设性接口，例如新的 `/api/v1/merchant/*` 子路由、模板规则接口、临时返回字段或本地兼容分支。
+- 禁止仅凭文档、命名推测或前端需要，自行新增后端接口代理、返回字段、类型契约或联调链路。
+- 若联调时发现「文档写了但后端实际没有」或「后端当前返回里没有该字段/接口」，以前端实际请求结果和后端当前代码为准，必须先向用户说明，再决定是回退实现还是在对应 **api-*-request.md** 标注差异。
+- 未经用户明确确认，不允许为了「先跑通页面」继续添加假设性接口，例如新的 `/api/v1/merchant/*` 子路由、模板规则接口、临时返回字段或本地兼容分支。

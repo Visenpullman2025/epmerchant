@@ -6,7 +6,7 @@ import type {
   MerchantServiceProjectItem,
   MerchantServiceSaveRequest,
   ServiceCreateDataField
-} from "@shared/api/contracts/merchant-api";
+} from "@/lib/api/merchant-api";
 
 export type MerchantServiceCard = {
   id: string;
@@ -130,14 +130,58 @@ export function formatPriceRange(priceMin: number, priceMax: number, unit = "") 
   return `฿ ${priceMin} - ${priceMax}${unitText}`;
 }
 
+function serviceRow(item: MerchantServiceProjectItem): Record<string, unknown> {
+  return item as unknown as Record<string, unknown>;
+}
+
+function pickIsOpen(item: MerchantServiceProjectItem, r: Record<string, unknown>): boolean {
+  if (typeof item.isOpen === "boolean") return item.isOpen;
+  const v = r.is_open;
+  if (v === false || v === 0 || v === "0") return false;
+  if (v === true || v === 1 || v === "1") return true;
+  return true;
+}
+
+function pickReviewedAt(item: MerchantServiceProjectItem, r: Record<string, unknown>): string | undefined {
+  if (typeof item.reviewedAt === "string" && item.reviewedAt.trim()) return item.reviewedAt.trim();
+  const v = r.reviewed_at;
+  return typeof v === "string" && v.trim() ? v.trim() : undefined;
+}
+
+function pickReviewStateRaw(item: MerchantServiceProjectItem, r: Record<string, unknown>): string | undefined {
+  const rs = item.reviewState ?? r.review_state;
+  return typeof rs === "string" && rs ? rs : undefined;
+}
+
+function normalizeReviewStateToken(raw?: string): "pending" | "approved" | "rejected" | undefined {
+  if (!raw) return undefined;
+  const s = raw.toLowerCase();
+  if (s === "pending" || s === "approved" || s === "rejected") return s;
+  return undefined;
+}
+
+/**
+ * 列表展示用：后端可能只给 `status=active` 而不给 `reviewState`。
+ * 与库表一致：`reviewed_at` 空且 `is_open=0` 表示仍待运营审核，应显示「审核中」而非「已上架」。
+ */
 export function normalizeServiceCard(item: MerchantServiceProjectItem): MerchantServiceCard {
+  const r = serviceRow(item);
+  const statusStr = toText(item.status ?? r.status);
+  const isDraft = statusStr.toLowerCase() === "draft";
+  const isOpen = pickIsOpen(item, r);
+  const reviewedAt = pickReviewedAt(item, r);
+  let reviewState = normalizeReviewStateToken(pickReviewStateRaw(item, r));
+
+  if (!reviewState && !isDraft) {
+    if (!reviewedAt && !isOpen) {
+      reviewState = "pending";
+    } else if (reviewedAt || isOpen) {
+      reviewState = "approved";
+    }
+  }
+
   const subtitle = item.processTemplateName || item.categoryName || item.categoryCode;
-  const visible = item.isOpen !== false;
-  const reviewState =
-    item.reviewState === "approved" || item.reviewState === "rejected" || item.reviewState === "pending"
-      ? item.reviewState
-      : undefined;
-  const published = reviewState ? reviewState === "approved" : item.status !== "draft";
+  const published = reviewState === "approved";
   return {
     id: item.id,
     title: item.title,
@@ -148,9 +192,11 @@ export function normalizeServiceCard(item: MerchantServiceProjectItem): Merchant
     priceMin: item.priceMin,
     priceMax: item.priceMax,
     published,
-    visible,
+    visible: isOpen,
     reviewState,
-    reviewNote: item.reviewNote,
+    reviewNote:
+      (typeof item.reviewNote === "string" ? item.reviewNote : undefined) ??
+      (typeof r.review_note === "string" ? r.review_note : undefined),
     status: item.status
   };
 }
@@ -229,6 +275,8 @@ function normalizePriceItems(item: MerchantServiceDetailResponse) {
 
 export function normalizeServiceDetail(item: MerchantServiceDetailResponse): MerchantServiceDraft {
   const normalizedPriceItems = normalizePriceItems(item);
+  const r = serviceRow(item);
+  const isOpen = pickIsOpen(item, r);
   return {
     id: item.id,
     title: item.title || "",
@@ -236,7 +284,7 @@ export function normalizeServiceDetail(item: MerchantServiceDetailResponse): Mer
     categoryCode: item.categoryCode || "",
     processTemplateCode: item.processTemplateCode || "",
     coverImageUrl: item.imageUrl || "/images/merchant-onboarding-hero.svg",
-    visible: item.isOpen !== false,
+    visible: isOpen,
     published: item.status !== "draft",
     pricingStrategy:
       typeof item.pricingConfig === "object" && item.pricingConfig && "strategy" in item.pricingConfig
