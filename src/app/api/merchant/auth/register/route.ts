@@ -7,41 +7,12 @@ import type {
 } from "@/lib/api/merchant-api";
 import { apiError, apiSuccess } from "@/lib/api/contract-response";
 import { buildBackendUrl } from "@/lib/api/backend";
-
-const locales: LocaleCode[] = ["zh", "en", "th"];
-
-function extractPreferredLocale(data: Record<string, unknown>, fallback: LocaleCode): LocaleCode {
-  const locale = data.preferredLocale || data.preferred_locale;
-  if (typeof locale === "string" && locales.includes(locale as LocaleCode)) {
-    return locale as LocaleCode;
-  }
-  return fallback;
-}
-
-function extractToken(data: Record<string, unknown>): string | null {
-  const candidates = [
-    data.token,
-    data.accessToken,
-    data.access_token,
-    data.bearerToken,
-    data.bearer_token
-  ];
-  for (const item of candidates) {
-    if (typeof item === "string" && item.trim()) {
-      return item.trim();
-    }
-  }
-  return null;
-}
-
-function readSetCookies(headers: Headers): string[] {
-  const withMethod = headers as Headers & { getSetCookie?: () => string[] };
-  if (typeof withMethod.getSetCookie === "function") {
-    return withMethod.getSetCookie();
-  }
-  const single = headers.get("set-cookie");
-  return single ? [single] : [];
-}
+import {
+  MERCHANT_AUTH_LOCALES,
+  extractMerchantAuthToken,
+  extractPreferredLocale,
+  readSetCookies
+} from "@/lib/merchant/auth-session-tokens";
 
 export async function POST(request: Request) {
   try {
@@ -84,11 +55,13 @@ export async function POST(request: Request) {
     }
 
     const upstreamPayload = (await upstream.json()) as ApiSuccess<Record<string, unknown>>;
-    const requestedLocale = locales.includes((requestPayload.locale || "") as LocaleCode)
+    const requestedLocale: LocaleCode = MERCHANT_AUTH_LOCALES.includes(
+      (requestPayload.locale || "") as LocaleCode
+    )
       ? (requestPayload.locale as LocaleCode)
       : "en";
     const preferredLocale = extractPreferredLocale(upstreamPayload.data || {}, requestedLocale);
-    const token = extractToken(upstreamPayload.data || {});
+    const token = extractMerchantAuthToken(upstreamPayload.data || {});
 
     const payload: RegisterResponse = { success: true, preferredLocale };
     const response = apiSuccess(payload);

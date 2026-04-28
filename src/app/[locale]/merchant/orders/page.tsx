@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
+import { DEFAULT_LIST_LIMIT } from "@/lib/api/limits";
 import { getJson, postJson } from "@/lib/merchant/auth-client";
 import type {
   MerchantOrderActionRequest,
@@ -283,8 +284,8 @@ export default function MerchantOrdersPage() {
 
     if (status === "inService") {
       const [inRes, pendRes] = await Promise.all([
-        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=inService&page=1&pageSize=20`),
-        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=pending&page=1&pageSize=20`)
+        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=inService&page=1&pageSize=${DEFAULT_LIST_LIMIT}`),
+        getJson<MerchantOrdersResponse>(`/api/merchant/orders?status=pending&page=1&pageSize=${DEFAULT_LIST_LIMIT}`)
       ]);
       if (!active) return;
       if (!inRes.ok && !pendRes.ok) {
@@ -318,7 +319,7 @@ export default function MerchantOrdersPage() {
 
     if (status === "pending") {
       const result = await getJson<MerchantOrdersResponse>(
-        `/api/merchant/orders?status=pending&page=1&pageSize=20`
+        `/api/merchant/orders?status=pending&page=1&pageSize=${DEFAULT_LIST_LIMIT}`
       );
       if (!active) return;
       if (!result.ok) {
@@ -335,7 +336,7 @@ export default function MerchantOrdersPage() {
     }
 
     const result = await getJson<MerchantOrdersResponse>(
-      `/api/merchant/orders?status=${status}&page=1&pageSize=20`
+      `/api/merchant/orders?status=${status}&page=1&pageSize=${DEFAULT_LIST_LIMIT}`
     );
     if (!active) return;
     setLoading(false);

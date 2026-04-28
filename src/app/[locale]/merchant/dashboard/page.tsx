@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import MerchantAvailabilityCalendar from "@/components/merchant/MerchantAvailabilityCalendar";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import { buildBackendUrl } from "@/lib/api/backend";
+import { MAX_LIST_LIMIT } from "@/lib/api/limits";
 import type { ApiError, ApiSuccess, MerchantOrderItem, MerchantOrdersResponse } from "@/lib/api/merchant-api";
 
 type Props = {
@@ -40,7 +41,9 @@ export default async function MerchantDashboardPage({ params }: Props) {
   }
 
   if (token) {
-    const orders = await fetchMerchant<MerchantOrdersResponse>("/api/v1/merchant/orders?page=1&pageSize=100");
+    const orders = await fetchMerchant<MerchantOrdersResponse>(
+      `/api/v1/merchant/orders?page=1&pageSize=${MAX_LIST_LIMIT}`
+    );
     orderList = orders?.list || [];
   }
 

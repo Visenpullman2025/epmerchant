@@ -19,7 +19,6 @@ import {
   extractPricingStrategy,
   normalizeCategories,
   normalizeServiceDetail,
-  replaceTemplatePriceItems,
   resolveTemplateDetailSource,
   type MerchantServiceDraft
 } from "../services-store";
@@ -174,7 +173,7 @@ export default function MerchantServiceDetailPage() {
       nextCategory?.templates?.find(
         (template) => template.code === nextCategory?.defaultTemplateCode
       ) || nextCategory?.templates?.[0];
-    const nextPriceItems = replaceTemplatePriceItems(nextTemplate?.name || "", service.priceItems);
+    const nextPriceItems = service.priceItems;
     update({
       categoryCode: nextCategoryCode,
       processTemplateCode: nextTemplate?.code || "",
@@ -193,7 +192,7 @@ export default function MerchantServiceDetailPage() {
     setMessage("");
     const nextTemplate =
       selectedCategory?.templates?.find((template) => template.code === nextTemplateCode) || null;
-    const nextPriceItems = replaceTemplatePriceItems(nextTemplate?.name || "", service.priceItems);
+    const nextPriceItems = service.priceItems;
     update({
       processTemplateCode: nextTemplateCode,
       priceItems: nextPriceItems

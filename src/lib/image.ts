@@ -1,4 +1,7 @@
-/** 外链或可能跨域：用 unoptimized 直连，避免经 /next/image 代理触发 CORB */
+/**
+ * 图片 URL 工具（商户端单仓；广场帖子规范化见 `@/lib/square/normalize`）。
+ * 外链或可能跨域：用 unoptimized 直连，避免经 /next/image 代理触发 CORB
+ */
 export function isRemoteImageUrl(url: string): boolean {
   if (typeof url !== "string" || !url.trim()) return false;
   const u = url.trim();

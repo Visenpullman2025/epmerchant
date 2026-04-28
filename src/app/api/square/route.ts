@@ -1,42 +1,7 @@
-import type { SquarePost } from "@/data/square";
 import { buildBackendUrl } from "@/lib/api/backend";
+import { clampListLimitParam, DEFAULT_LIST_LIMIT } from "@/lib/api/limits";
 import { squareFail, squareOk } from "@/lib/api/square-envelope";
-import { normalizePublicImageUrl } from "@/lib/image";
-
-function normalizePosts(input: unknown): SquarePost[] {
-  if (!Array.isArray(input)) return [];
-  return input
-    .map((item) => {
-      const row = item as Record<string, unknown>;
-      const id = String(row.id ?? "");
-      if (!id) return null;
-
-      const authorRaw = (row.author ?? {}) as Record<string, unknown>;
-      return {
-        id,
-        author: {
-          id: String(authorRaw.id ?? `u-${id}`),
-          name: String(authorRaw.name ?? row.authorName ?? "ExpatTH User"),
-          avatarUrl: typeof authorRaw.avatarUrl === "string" ? authorRaw.avatarUrl : undefined,
-          verified: Boolean(authorRaw.verified ?? row.authorVerified ?? false),
-          following: Boolean(authorRaw.following ?? authorRaw.isFollowing ?? row.following ?? false)
-        },
-        createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
-        content: String(row.content ?? row.text ?? ""),
-        tags: Array.isArray(row.tags) ? row.tags.map((tag) => String(tag)) : [],
-        imageUrl:
-          typeof row.imageUrl === "string"
-            ? normalizePublicImageUrl(row.imageUrl)
-            : typeof row.image_url === "string"
-              ? normalizePublicImageUrl(row.image_url)
-              : undefined,
-        likes: Number(row.likes ?? 0),
-        comments: Number(row.comments ?? 0),
-        shares: Number(row.shares ?? 0)
-      } satisfies SquarePost;
-    })
-    .filter((item) => item !== null) as SquarePost[];
-}
+import { normalizeSquarePosts } from "@/lib/square/normalize";
 
 async function fetchFromBackend(locale: string, limit: number, authorId?: string | null) {
   const candidates = authorId
@@ -56,7 +21,7 @@ async function fetchFromBackend(locale: string, limit: number, authorId?: string
     const res = await fetch(url.toString(), { cache: "no-store" });
     if (!res.ok) continue;
     const json = (await res.json()) as { data?: unknown };
-    const posts = normalizePosts(json.data);
+    const posts = normalizeSquarePosts(json.data);
     if (posts.length > 0) return posts;
   }
 
@@ -67,8 +32,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const locale = searchParams.get("locale") ?? "zh";
   const authorId = searchParams.get("authorId");
-  const limit = Number(searchParams.get("limit") ?? 20);
-  const safeLimit = Number.isFinite(limit) ? limit : 20;
+  const safeLimit = clampListLimitParam(searchParams.get("limit"), DEFAULT_LIST_LIMIT);
 
   const backendPosts = await fetchFromBackend(locale, safeLimit, authorId);
   if (backendPosts && backendPosts.length > 0) {

@@ -1,0 +1,382 @@
+import type {
+  MerchantCategoryItem,
+  MerchantCategoryTemplate,
+  MerchantServiceDetailResponse,
+  MerchantServiceProjectItem
+} from "@/lib/api/merchant-api";
+import type { MerchantServiceCard, MerchantServiceDraft, MerchantServicePriceDraft } from "./draft";
+import { makeId } from "./draft";
+
+function toNumber(value: unknown) {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const normalized = Number(value);
+    return Number.isFinite(normalized) ? normalized : 0;
+  }
+  return 0;
+}
+
+function toText(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function toTemplate(item: unknown): MerchantCategoryTemplate | null {
+  if (!item || typeof item !== "object") return null;
+  const record = item as Record<string, unknown>;
+  const code = toText(record.code || record.templateCode || record.template_code);
+  if (!code) return null;
+  return {
+    code,
+    name: toText(record.name || record.templateName || record.template_name) || code,
+    templateDetail:
+      record.templateDetail && typeof record.templateDetail === "object"
+        ? (record.templateDetail as Record<string, unknown>)
+        : record.template_detail && typeof record.template_detail === "object"
+          ? (record.template_detail as Record<string, unknown>)
+          : null
+  };
+}
+
+export function normalizeCategories(raw: MerchantCategoryItem[] | unknown): MerchantCategoryItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const code = toText(record.code || record.categoryCode || record.category_code);
+      if (!code) return null;
+      const templatesRaw =
+        Array.isArray(record.templates)
+          ? record.templates
+          : Array.isArray(record.processTemplates)
+            ? record.processTemplates
+            : Array.isArray(record.process_templates)
+              ? record.process_templates
+              : [];
+      return {
+        code,
+        name: toText(record.name || record.categoryName || record.category_name) || code,
+        selected: Boolean(record.selected),
+        templates: templatesRaw.map(toTemplate).filter(Boolean) as MerchantCategoryTemplate[],
+        defaultTemplateCode:
+          toText(
+            record.defaultTemplateCode ||
+              record.default_template_code ||
+              record.defaultProcessTemplateCode ||
+              record.default_process_template_code
+          ) || null,
+        defaultTemplateName:
+          toText(record.defaultTemplateName || record.default_template_name) || null,
+        defaultTemplateDetail:
+          record.defaultTemplateDetail && typeof record.defaultTemplateDetail === "object"
+            ? (record.defaultTemplateDetail as Record<string, unknown>)
+            : record.default_template_detail && typeof record.default_template_detail === "object"
+              ? (record.default_template_detail as Record<string, unknown>)
+              : null
+      };
+    })
+    .filter(Boolean) as MerchantCategoryItem[];
+}
+
+export function formatPriceRange(priceMin: number, priceMax: number, unit = "") {
+  const unitText = unit ? ` / ${unit}` : "";
+  if (priceMin <= 0 && priceMax <= 0) return `฿ 0${unitText}`;
+  if (priceMin === priceMax) return `฿ ${priceMin}${unitText}`;
+  return `฿ ${priceMin} - ${priceMax}${unitText}`;
+}
+
+function serviceRow(item: MerchantServiceProjectItem): Record<string, unknown> {
+  return item as unknown as Record<string, unknown>;
+}
+
+function pickIsOpen(item: MerchantServiceProjectItem, r: Record<string, unknown>): boolean {
+  if (typeof item.isOpen === "boolean") return item.isOpen;
+  const v = r.is_open;
+  if (v === false || v === 0 || v === "0") return false;
+  if (v === true || v === 1 || v === "1") return true;
+  return true;
+}
+
+function pickReviewedAt(item: MerchantServiceProjectItem, r: Record<string, unknown>): string | undefined {
+  if (typeof item.reviewedAt === "string" && item.reviewedAt.trim()) return item.reviewedAt.trim();
+  const v = r.reviewed_at;
+  return typeof v === "string" && v.trim() ? v.trim() : undefined;
+}
+
+function pickReviewStateRaw(item: MerchantServiceProjectItem, r: Record<string, unknown>): string | undefined {
+  const rs = item.reviewState ?? r.review_state;
+  return typeof rs === "string" && rs ? rs : undefined;
+}
+
+function normalizeReviewStateToken(raw?: string): "pending" | "approved" | "rejected" | undefined {
+  if (!raw) return undefined;
+  const s = raw.toLowerCase();
+  if (s === "pending" || s === "approved" || s === "rejected") return s;
+  return undefined;
+}
+
+export function normalizeServiceCard(item: MerchantServiceProjectItem): MerchantServiceCard {
+  const r = serviceRow(item);
+  const statusStr = toText(item.status ?? r.status);
+  const isDraft = statusStr.toLowerCase() === "draft";
+  const isOpen = pickIsOpen(item, r);
+  const reviewedAt = pickReviewedAt(item, r);
+  let reviewState = normalizeReviewStateToken(pickReviewStateRaw(item, r));
+
+  if (!reviewState && !isDraft) {
+    if (!reviewedAt && !isOpen) {
+      reviewState = "pending";
+    } else if (reviewedAt || isOpen) {
+      reviewState = "approved";
+    }
+  }
+
+  const subtitle = item.processTemplateName || item.categoryName || item.categoryCode;
+  const published = reviewState === "approved";
+  return {
+    id: item.id,
+    title: item.title,
+    subtitle,
+    description: item.description || "",
+    coverImageUrl: item.imageUrl || "/images/merchant-onboarding-hero.svg",
+    priceText: formatPriceRange(item.priceMin, item.priceMax, item.unit),
+    priceMin: item.priceMin,
+    priceMax: item.priceMax,
+    published,
+    visible: isOpen,
+    reviewState,
+    reviewNote:
+      (typeof item.reviewNote === "string" ? item.reviewNote : undefined) ??
+      (typeof r.review_note === "string" ? r.review_note : undefined),
+    status: item.status
+  };
+}
+
+function normalizePriceItemEntry(item: unknown): MerchantServicePriceDraft | null {
+  if (!item || typeof item !== "object") return null;
+  const record = item as Record<string, unknown>;
+  const key = toText(record.key);
+  const label = toText(record.label || record.name || record.title) || key;
+  const inputType: MerchantServicePriceDraft["inputType"] =
+    toText(record.type) === "select"
+      ? "select"
+      : toText(record.type) === "text"
+        ? "text"
+        : "number";
+  const options = Array.isArray(record.options)
+    ? record.options
+        .map((option) => {
+          if (!option || typeof option !== "object") return null;
+          const optionRecord = option as Record<string, unknown>;
+          const value = toText(optionRecord.value || optionRecord.code);
+          if (!value) return null;
+          return {
+            label: toText(optionRecord.label || optionRecord.name) || value,
+            value
+          };
+        })
+        .filter(Boolean) as { label: string; value: string }[]
+    : [];
+  const amountValue =
+    inputType === "select" || inputType === "text"
+      ? record.value ?? record.defaultValue ?? ""
+      : record.amount ?? record.price ?? record.defaultAmount ?? record.defaultValue ?? 0;
+  if (!label && !key) return null;
+  return {
+    id: makeId(),
+    key,
+    label,
+    amount: inputType === "number" ? String(toNumber(amountValue)) : toText(amountValue),
+    readonly: true,
+    inputType,
+    options
+  };
+}
+
+function normalizePriceItems(item: MerchantServiceDetailResponse) {
+  const directPriceItems = Array.isArray(item.priceItems) ? item.priceItems : [];
+  const pricingConfig =
+    item.pricingConfig && typeof item.pricingConfig === "object" ? item.pricingConfig : null;
+  const configPriceItems = Array.isArray(pricingConfig?.priceItems) ? pricingConfig.priceItems : [];
+  const priceItemsRaw = configPriceItems.length ? configPriceItems : directPriceItems;
+  if (!priceItemsRaw.length) {
+    return [];
+  }
+  return priceItemsRaw.map(normalizePriceItemEntry).filter(Boolean) as MerchantServicePriceDraft[];
+}
+
+export function normalizeServiceDetail(item: MerchantServiceDetailResponse): MerchantServiceDraft {
+  const normalizedPriceItems = normalizePriceItems(item);
+  const r = serviceRow(item);
+  const isOpen = pickIsOpen(item, r);
+  return {
+    id: item.id,
+    title: item.title || "",
+    description: item.description || "",
+    categoryCode: item.categoryCode || "",
+    processTemplateCode: item.processTemplateCode || "",
+    coverImageUrl: item.imageUrl || "/images/merchant-onboarding-hero.svg",
+    visible: isOpen,
+    published: item.status !== "draft",
+    pricingStrategy:
+      typeof item.pricingConfig === "object" && item.pricingConfig && "strategy" in item.pricingConfig
+        ? toText((item.pricingConfig as Record<string, unknown>).strategy) || undefined
+        : undefined,
+    pricingSchema:
+      typeof item.pricingConfig === "object" &&
+      item.pricingConfig &&
+      "pricingSchema" in item.pricingConfig &&
+      (item.pricingConfig as Record<string, unknown>).pricingSchema &&
+      typeof (item.pricingConfig as Record<string, unknown>).pricingSchema === "object"
+        ? ((item.pricingConfig as Record<string, unknown>).pricingSchema as Record<string, unknown>)
+        : null,
+    priceItems:
+      normalizedPriceItems.length > 0
+        ? normalizedPriceItems
+        : [
+            {
+              id: makeId(),
+              label: item.processTemplateName || item.title || "",
+              amount: String(item.priceMin || item.priceMax || 0),
+              readonly: true,
+              inputType: "number" as const
+            }
+          ]
+  };
+}
+
+export function extractTemplatePriceItems(raw: unknown): MerchantServicePriceDraft[] {
+  if (!raw || typeof raw !== "object") return [];
+  const record = raw as Record<string, unknown>;
+  const directItems = Array.isArray(record.priceItems) ? record.priceItems : null;
+  const pricingConfig =
+    record.pricingConfig && typeof record.pricingConfig === "object"
+      ? (record.pricingConfig as Record<string, unknown>)
+      : null;
+  const pricingRules =
+    record.pricingRules && typeof record.pricingRules === "object"
+      ? (record.pricingRules as Record<string, unknown>)
+      : null;
+  const priceItemsRaw =
+    directItems ||
+    (Array.isArray(pricingConfig?.priceItems) ? pricingConfig.priceItems : null) ||
+    (Array.isArray(pricingRules?.priceItems) ? pricingRules.priceItems : null) ||
+    [];
+
+  return priceItemsRaw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const entry = item as Record<string, unknown>;
+      const label = toText(entry.label || entry.name || entry.title);
+      const key = toText(entry.key);
+      if (!label && !key) return null;
+      const defaultAmount =
+        entry.defaultValue ?? entry.defaultAmount ?? entry.amount ?? entry.price ?? 0;
+      const options = Array.isArray(entry.options)
+        ? entry.options
+            .map((option) => {
+              if (!option || typeof option !== "object") return null;
+              const record = option as Record<string, unknown>;
+              const value = toText(record.value || record.code);
+              if (!value) return null;
+              return {
+                label: toText(record.label || record.name) || value,
+                value
+              };
+            })
+            .filter(Boolean) as { label: string; value: string }[]
+        : [];
+      const inputType: MerchantServicePriceDraft["inputType"] =
+        toText(entry.type) === "select"
+          ? "select"
+          : toText(entry.type) === "text"
+            ? "text"
+            : "number";
+      return {
+        id: makeId(),
+        key,
+        label: label || key,
+        amount: String(toNumber(defaultAmount)),
+        readonly: true,
+        inputType,
+        options
+      };
+    })
+    .filter(Boolean) as MerchantServicePriceDraft[];
+}
+
+export function resolveTemplateDetailSource(raw: unknown) {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  if (record.editorConfig && typeof record.editorConfig === "object") {
+    return record.editorConfig as Record<string, unknown>;
+  }
+  if (record.defaultTemplateDetail && typeof record.defaultTemplateDetail === "object") {
+    return record.defaultTemplateDetail as Record<string, unknown>;
+  }
+  if (record.templateDetail && typeof record.templateDetail === "object") {
+    return record.templateDetail as Record<string, unknown>;
+  }
+  return record;
+}
+
+export function applyTemplatePriceItems(
+  templateItems: MerchantServicePriceDraft[],
+  currentItems: MerchantServicePriceDraft[]
+) {
+  if (!templateItems.length) return currentItems;
+  return templateItems.map((item, index) => {
+    const matchedCurrent =
+      currentItems.find((current) => current.key && item.key && current.key === item.key) ||
+      currentItems.find((current) => current.label === item.label) ||
+      currentItems[index];
+    return {
+      ...item,
+      amount:
+        matchedCurrent && matchedCurrent.amount.trim()
+          ? matchedCurrent.amount
+          : item.amount
+    };
+  });
+}
+
+export function extractPricingStrategy(raw: unknown) {
+  if (!raw || typeof raw !== "object") return undefined;
+  const record = raw as Record<string, unknown>;
+  const pricingConfig =
+    record.pricingConfig && typeof record.pricingConfig === "object"
+      ? (record.pricingConfig as Record<string, unknown>)
+      : null;
+  const pricingRules =
+    record.pricingRules && typeof record.pricingRules === "object"
+      ? (record.pricingRules as Record<string, unknown>)
+      : null;
+  return (
+    toText(record.pricingStrategy) ||
+    toText(pricingConfig?.strategy) ||
+    toText(pricingRules?.strategy) ||
+    undefined
+  );
+}
+
+export function extractPricingSchema(raw: unknown) {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const direct = record.pricingSchema;
+  if (direct && typeof direct === "object") return direct as Record<string, unknown>;
+  const pricingConfig =
+    record.pricingConfig && typeof record.pricingConfig === "object"
+      ? (record.pricingConfig as Record<string, unknown>)
+      : null;
+  if (pricingConfig?.pricingSchema && typeof pricingConfig.pricingSchema === "object") {
+    return pricingConfig.pricingSchema as Record<string, unknown>;
+  }
+  const pricingRules =
+    record.pricingRules && typeof record.pricingRules === "object"
+      ? (record.pricingRules as Record<string, unknown>)
+      : null;
+  if (pricingRules?.pricingSchema && typeof pricingRules.pricingSchema === "object") {
+    return pricingRules.pricingSchema as Record<string, unknown>;
+  }
+  return null;
+}

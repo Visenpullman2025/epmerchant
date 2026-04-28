@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
+import { clampListLimitParam } from "@/lib/api/limits";
 import { getJson, postJson } from "@/lib/merchant/auth-client";
 import type {
   MerchantWalletRecordsResponse,
@@ -27,7 +28,9 @@ export default function MerchantWalletPage() {
     async function loadWallet() {
       const [summaryResult, recordsResult] = await Promise.all([
         getJson<MerchantWalletSummaryResponse>("/api/merchant/wallet"),
-        getJson<MerchantWalletRecordsResponse>("/api/merchant/wallet/records?page=1&pageSize=10")
+        getJson<MerchantWalletRecordsResponse>(
+          `/api/merchant/wallet/records?page=1&pageSize=${clampListLimitParam("10")}`
+        )
       ]);
       if (!active) return;
       if (summaryResult.ok) {

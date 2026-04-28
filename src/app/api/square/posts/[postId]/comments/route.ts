@@ -1,17 +1,6 @@
-import { cookies } from "next/headers";
 import { buildBackendUrl } from "@/lib/api/backend";
 import { squareFail, squareOk } from "@/lib/api/square-envelope";
-
-async function buildMerchantHeaders(): Promise<HeadersInit | null> {
-  const token = (await cookies()).get("merchant_token")?.value;
-  if (!token) return null;
-  const authorization = token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`;
-  return {
-    "Content-Type": "application/json",
-    Authorization: authorization,
-    "X-Merchant-Token": token.replace(/^Bearer\s+/i, "")
-  };
-}
+import { squareMerchantHeaders } from "@/lib/square/merchant-headers";
 
 export async function GET(
   request: Request,
@@ -47,7 +36,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ postId: string }> }
 ) {
-  const headers = await buildMerchantHeaders();
+  const headers = await squareMerchantHeaders();
   if (!headers) return squareFail("unauthorized", 401, 401, null);
 
   const { searchParams } = new URL(request.url);

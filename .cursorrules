@@ -50,3 +50,45 @@
 - 禁止仅凭文档、命名推测或前端需要，自行新增后端接口代理、返回字段、类型契约或联调链路。
 - 若联调时发现「文档写了但后端实际没有」或「后端当前返回里没有该字段/接口」，以前端实际请求结果和后端当前代码为准，必须先向用户说明，再决定是回退实现还是在对应 **api-*-request.md** 标注差异。
 - 未经用户明确确认，不允许为了「先跑通页面」继续添加假设性接口，例如新的 `/api/v1/merchant/*` 子路由、模板规则接口、临时返回字段或本地兼容分支。
+
+---
+
+# 2026-04-28 项目经理覆盖规则：Expatth 商家端 P1 工作流
+
+以下规则优先级高于上方旧 shared 入口。上方 `shared/docs/api-merchant-request.md`、`api-merchant-list.md`、`project-flow.md` 等旧入口仅作历史参考；当前主线以 `/home/visen/projects/expatth-shared` 为准。
+
+## A. 每次任务必须先读
+- `/home/visen/projects/expatth-shared/docs/glossary.md`
+- `/home/visen/projects/expatth-shared/docs/boundaries.md`
+- `/home/visen/projects/expatth-shared/api/requests.md`
+- `/home/visen/projects/expatth-shared/api/merchant-api.md`
+- `/home/visen/projects/expatth-shared/api/registry.md`
+- `/home/visen/projects/expatth-shared/roles/merchant-frontend.md`
+- `/home/visen/projects/expatth-shared/reports/merchant-frontend.md`
+
+## B. 固定业务边界
+- 商家端长期对象是 `MerchantCapability`、`MerchantCandidate`、`MerchantQuoteConfirmation`。
+- 旧 `merchant/services*` 仅是 compatibility，不得继续强化为“服务商品/上架商品”主线。
+- 新 UI 命名优先使用“能力配置中心”，不再强化“服务中心”商品化心智。
+- 商家端不得允许用户选择商家内部师傅/人员。
+- 不得自定义订单、候选、确认单状态机；以 shared 的 `state-machine.md` 和后端返回为准。
+- 禁止用 `product`、`goods`、`item`（货品义）、`listing`、`shop_service`、`service product` 描述主业务对象。
+
+## C. API 与需求池规则
+- 所有新接口、字段缺口、联调差异只写 `/home/visen/projects/expatth-shared/api/requests.md`。
+- 已完成或现网可用接口只登记 `/home/visen/projects/expatth-shared/api/registry.md`。
+- 新增任何 R- 条目前，必须先读取 `api/requests.md` 的“维护”段落，确认下一编号；不得复用别人报告里的编号。
+- `api/merchant-api.md` 是合同，不是需求池；不得把未确认字段直接写死为合同。
+
+## D. 工作报告
+- 每轮任务完成后，必须更新 `/home/visen/projects/expatth-shared/reports/merchant-frontend.md`。
+- 报告必须使用 reports/README.md 里的 10 节固定格式。
+- 不允许只在聊天里汇报，不允许跳过“编号校验”。
+
+## E. 当前 P1 顺序
+- P1a：保留 profile / verification / wallet / 旧订单只读能力，先不破坏现网。
+- P1b：新增 MerchantCapability 能力配置中心，旧 `merchant/services*` 兼容并存。
+- P1c：新增 MerchantCandidate 待确认请求池。
+- P1d：新增 MerchantQuoteConfirmation 提交流程。
+- P1e：订单列表拆清“确认报价/候选”和“履约订单”。
+- P1f：信用档案与售后状态只读展示。
