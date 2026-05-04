@@ -121,11 +121,11 @@ export default async function MerchantDashboardPage({ params }: Props) {
             {totalOrders > 0 ? t("onlineOrderDesc") : t("onlineOrderEmptyDesc")}
           </p>
           <div className="mt-3 flex gap-2">
-            <Link className="apple-btn-primary inline-flex items-center justify-center" href={`/${locale}/merchant/orders`}>
+            <Link className="apple-btn-primary inline-flex items-center justify-center" href={`/${locale}/merchant/order-requests`}>
               {t("goOrderCenter")}
             </Link>
-            <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/orders`}>
-              {t("pauseOrders")}
+            <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/capabilities`}>
+              {t("manageCapabilities")}
             </Link>
           </div>
         </article>

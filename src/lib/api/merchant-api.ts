@@ -349,3 +349,86 @@ export type MerchantProcessTemplateResponse = {
     fields?: ServiceCreateDataField[];
   } | null;
 };
+
+export type MerchantCapabilityItem = {
+  capabilityId: string | number;
+  standardServiceCode: string;
+  enabled: boolean;
+  serviceArea?: Record<string, unknown> | null;
+  basePricingRule?: Record<string, unknown> | null;
+  extraDistanceRule?: Record<string, unknown> | null;
+  capacityRule?: Record<string, unknown> | null;
+  openDates?: string[];
+  status?: string;
+  reviewState?: string;
+};
+
+export type MerchantCapabilitiesResponse = {
+  list: MerchantCapabilityItem[];
+  total?: number;
+};
+
+export type MerchantCapabilitySaveRequest = {
+  standardServiceCode: string;
+  enabled: boolean;
+  serviceArea?: Record<string, unknown> | null;
+  basePricingRule?: Record<string, unknown> | null;
+  extraDistanceRule?: Record<string, unknown> | null;
+  capacityRule?: Record<string, unknown> | null;
+  openDates?: string[];
+};
+
+export type MerchantCapabilitySaveResponse = {
+  capability: MerchantCapabilityItem;
+};
+
+export type MerchantCandidateItem = {
+  candidateId: string | number;
+  orderNo: string;
+  standardServiceCode: string;
+  requirementSummary?: string | Record<string, unknown> | null;
+  quotePreview?: Record<string, unknown> | null;
+  serviceAddress?: string | { address?: string; [key: string]: unknown } | null;
+  requestedAppointment?: string | Record<string, unknown> | null;
+  expiresAt?: string | null;
+  status?: string;
+};
+
+export type MerchantOrderRequestsResponse = {
+  list: MerchantCandidateItem[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+};
+
+export type MerchantQuoteConfirmationRequest = {
+  finalAmount: number;
+  confirmedServiceTime: string;
+  merchantNote?: string;
+  validUntil?: string;
+};
+
+export type MerchantQuoteConfirmationResponse = {
+  merchantQuoteConfirmationId: string | number;
+  candidateId: string | number;
+  orderNo: string;
+  status: string;
+  finalAmount: string | number;
+  confirmedServiceTime: string;
+};
+
+export type MerchantCreditProfileResponse = {
+  score?: number | string | null;
+  level?: string | null;
+  badges?: string[];
+  lastUpdatedAt?: string | null;
+  events?: Array<{
+    eventType?: string;
+    title?: string;
+    note?: string;
+    description?: string;
+    createdAt?: string;
+    occurredAt?: string;
+    scoreDelta?: number | string;
+  }>;
+};

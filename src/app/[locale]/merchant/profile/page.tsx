@@ -158,6 +158,12 @@ export default function MerchantProfileHubPage() {
                   <MerchantProfileMenuRow
                     feature="flow"
                     glyphColor={THAI_RED}
+                    href={`/${locale}/merchant/credit-profile`}
+                    title={t("menuCredit")}
+                  />
+                  <MerchantProfileMenuRow
+                    feature="flow"
+                    glyphColor={THAI_BLUE}
                     href={`/${locale}/merchant/wallet#wallet-records`}
                     title={t("menuFlow")}
                   />
@@ -170,13 +176,13 @@ export default function MerchantProfileHubPage() {
                   <MerchantProfileMenuRow
                     feature="orders"
                     glyphColor={THAI_BLUE}
-                    href={`/${locale}/merchant/orders`}
+                    href={`/${locale}/merchant/order-requests`}
                     title={t("menuOrders")}
                   />
                   <MerchantProfileMenuRow
                     feature="services"
                     glyphColor={THAI_RED}
-                    href={`/${locale}/merchant/services`}
+                    href={`/${locale}/merchant/capabilities`}
                     title={t("menuServices")}
                   />
                 </div>
