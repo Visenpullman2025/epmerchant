@@ -64,7 +64,12 @@ export default function MerchantOrderRequestCard({
       </div>
 
       <div className="merchant-order-detail-rows mt-3">
+        <Detail label={t("matchScore")} value={displayValue(item.matchScore)} strong />
+        <Detail label={t("distanceKm")} value={item.distanceKm != null ? `${item.distanceKm} km` : "-"} />
+        <Detail label={t("availabilityStatus")} value={item.availabilityStatus || "-"} />
         <Detail label={t("quotePreview")} value={quotePreviewAmount(item.quotePreview)} strong />
+        <Detail label={t("pricing")} value={displayValue(item.pricing)} />
+        <Detail label={t("matchFactors")} value={displayValue(item.matchFactors)} />
         <Detail label={t("serviceAddress")} value={serviceAddressText(item.serviceAddress)} />
         <Detail label={t("requestedAppointment")} value={displayValue(item.requestedAppointment)} />
         <Detail label={t("expiresAt")} value={item.expiresAt || "-"} />

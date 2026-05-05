@@ -15,20 +15,26 @@ export type CapabilityDraft = {
   capabilityId?: string | number;
   standardServiceCode: string;
   enabled: boolean;
+  readyStatus: string;
   serviceArea: string;
   basePricingRule: string;
   extraDistanceRule: string;
   capacityRule: string;
+  timeSlots: string;
   openDates: string;
+  blackoutDates: string;
 };
 
 const emptyDraft: CapabilityDraft = {
   standardServiceCode: "",
   enabled: true,
+  readyStatus: "ready",
   serviceArea: "{}",
   basePricingRule: "{}",
   extraDistanceRule: "{}",
   capacityRule: "{}",
+  timeSlots: "[]",
+  blackoutDates: "",
   openDates: ""
 };
 
@@ -42,11 +48,14 @@ function draftFromCapability(item: MerchantCapabilityItem): CapabilityDraft {
     capabilityId: item.capabilityId,
     standardServiceCode: item.standardServiceCode || "",
     enabled: item.enabled !== false,
+    readyStatus: item.readyStatus || "ready",
     serviceArea: stringifyJson(item.serviceArea),
     basePricingRule: stringifyJson(item.basePricingRule),
     extraDistanceRule: stringifyJson(item.extraDistanceRule),
     capacityRule: stringifyJson(item.capacityRule),
-    openDates: (item.openDates || []).join(", ")
+    timeSlots: item.timeSlots == null ? "[]" : JSON.stringify(item.timeSlots, null, 2),
+    openDates: (item.openDates || []).join(", "),
+    blackoutDates: (item.blackoutDates || []).join(", ")
   };
 }
 
@@ -58,6 +67,23 @@ function parseObject(value: string, label: string) {
     throw new Error(label);
   }
   return parsed as Record<string, unknown>;
+}
+
+function parseJsonValue(value: string, label: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    throw new Error(label);
+  }
+}
+
+function parseDateList(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export default function MerchantCapabilityManager() {
@@ -112,10 +138,10 @@ export default function MerchantCapabilityManager() {
         basePricingRule: parseObject(draft.basePricingRule, t("invalidJson")),
         extraDistanceRule: parseObject(draft.extraDistanceRule, t("invalidJson")),
         capacityRule: parseObject(draft.capacityRule, t("invalidJson")),
-        openDates: draft.openDates
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
+        timeSlots: parseJsonValue(draft.timeSlots, t("invalidJson")),
+        readyStatus: draft.readyStatus.trim() || undefined,
+        openDates: parseDateList(draft.openDates),
+        blackoutDates: parseDateList(draft.blackoutDates)
       };
     } catch (error) {
       setMessageTone("error");

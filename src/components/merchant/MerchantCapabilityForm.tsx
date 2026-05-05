@@ -37,6 +37,18 @@ export default function MerchantCapabilityForm({
         />
         {t("enabled")}
       </label>
+      <div>
+        <label className="field-label">{t("readyStatus")}</label>
+        <select
+          className="field-select"
+          value={draft.readyStatus}
+          onChange={(event) => onChange({ ...draft, readyStatus: event.target.value })}
+        >
+          <option value="ready">{t("readyStatusReady")}</option>
+          <option value="limited">{t("readyStatusLimited")}</option>
+          <option value="paused">{t("readyStatusPaused")}</option>
+        </select>
+      </div>
       <JsonField label={t("serviceArea")} value={draft.serviceArea} onChange={(serviceArea) => onChange({ ...draft, serviceArea })} />
       <JsonField
         label={t("basePricingRule")}
@@ -53,6 +65,11 @@ export default function MerchantCapabilityForm({
         value={draft.capacityRule}
         onChange={(capacityRule) => onChange({ ...draft, capacityRule })}
       />
+      <JsonField
+        label={t("timeSlots")}
+        value={draft.timeSlots}
+        onChange={(timeSlots) => onChange({ ...draft, timeSlots })}
+      />
       <div>
         <label className="field-label">{t("openDates")}</label>
         <input
@@ -60,6 +77,15 @@ export default function MerchantCapabilityForm({
           placeholder="2026-05-10, 2026-05-11"
           value={draft.openDates}
           onChange={(event) => onChange({ ...draft, openDates: event.target.value })}
+        />
+      </div>
+      <div>
+        <label className="field-label">{t("blackoutDates")}</label>
+        <input
+          className="field-input"
+          placeholder="2026-05-12, 2026-05-13"
+          value={draft.blackoutDates}
+          onChange={(event) => onChange({ ...draft, blackoutDates: event.target.value })}
         />
       </div>
       <div className="flex flex-wrap gap-2">

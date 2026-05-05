@@ -148,8 +148,44 @@ export type MerchantOrderItem = {
   remark?: string | null;
   merchantNote?: string | null;
   pricingSnapshot?: Record<string, unknown> | null;
+  pricing?: Record<string, unknown> | null;
+  fulfillmentEvents?: MerchantFulfillmentEvent[];
+  settlement?: MerchantOrderSettlement | Record<string, unknown> | null;
+  creditImpact?: MerchantCreditImpact | Record<string, unknown> | null;
+  canReviewCustomer?: boolean | null;
+  reviewable?: boolean | null;
+  merchantCanReviewCustomer?: boolean | null;
+  merchantReview?: Record<string, unknown> | null;
+  myReview?: Record<string, unknown> | null;
   createdAt?: string;
   status: MerchantOrderStatus;
+};
+
+export type MerchantFulfillmentEvent = {
+  eventType?: string;
+  type?: string;
+  title?: string;
+  note?: string;
+  description?: string;
+  occurredAt?: string;
+  createdAt?: string;
+};
+
+export type MerchantOrderSettlement = {
+  status?: string;
+  holdStatus?: string;
+  platformFeePercent?: string | number | null;
+  platformFee?: string | number | null;
+  merchantSettlement?: string | number | null;
+  releasedAt?: string | null;
+};
+
+export type MerchantCreditImpact = {
+  scoreDelta?: string | number | null;
+  eventType?: string;
+  title?: string;
+  note?: string;
+  description?: string;
 };
 
 export type MerchantOrdersResponse = {
@@ -177,6 +213,9 @@ export type MerchantOrderActionResponse = {
   workflowStatus: string;
   confirmedServiceTime?: string | null;
   merchantNote?: string | null;
+  fulfillmentEvents?: MerchantFulfillmentEvent[];
+  settlement?: MerchantOrderSettlement | Record<string, unknown> | null;
+  creditImpact?: MerchantCreditImpact | Record<string, unknown> | null;
   /** 服务中取消等场景下可选，以后端为准 */
   penaltyAmount?: string | null;
   penaltyRate?: string | number | null;
@@ -358,9 +397,14 @@ export type MerchantCapabilityItem = {
   basePricingRule?: Record<string, unknown> | null;
   extraDistanceRule?: Record<string, unknown> | null;
   capacityRule?: Record<string, unknown> | null;
+  timeSlots?: Record<string, unknown>[] | Record<string, unknown> | null;
+  readyStatus?: string | null;
+  blackoutDates?: string[];
   openDates?: string[];
   status?: string;
   reviewState?: string;
+  matchingPolicyCode?: string | null;
+  workflowPolicyCode?: string | null;
 };
 
 export type MerchantCapabilitiesResponse = {
@@ -375,6 +419,9 @@ export type MerchantCapabilitySaveRequest = {
   basePricingRule?: Record<string, unknown> | null;
   extraDistanceRule?: Record<string, unknown> | null;
   capacityRule?: Record<string, unknown> | null;
+  timeSlots?: Record<string, unknown>[] | Record<string, unknown> | null;
+  readyStatus?: string;
+  blackoutDates?: string[];
   openDates?: string[];
 };
 
@@ -392,6 +439,12 @@ export type MerchantCandidateItem = {
   requestedAppointment?: string | Record<string, unknown> | null;
   expiresAt?: string | null;
   status?: string;
+  matchScore?: number | string | null;
+  matchFactors?: Array<string | Record<string, unknown>> | Record<string, unknown> | null;
+  distanceKm?: number | string | null;
+  availabilityStatus?: string | null;
+  pricing?: Record<string, unknown> | null;
+  responseScore?: number | string | null;
 };
 
 export type MerchantOrderRequestsResponse = {
@@ -415,6 +468,21 @@ export type MerchantQuoteConfirmationResponse = {
   status: string;
   finalAmount: string | number;
   confirmedServiceTime: string;
+};
+
+export type MerchantCustomerReviewRequest = {
+  orderNo: string;
+  rating: number;
+  content: string;
+  imageUrls?: string[];
+  publishToSquare?: boolean;
+  squarePublishAnonymous?: boolean;
+};
+
+export type MerchantCustomerReviewResponse = {
+  reviewId?: string | number;
+  squarePostId?: string | number | null;
+  squarePublishStatus?: string | null;
 };
 
 export type MerchantCreditProfileResponse = {

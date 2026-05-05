@@ -10,12 +10,27 @@ import { getJson, postJson } from "@/lib/merchant/auth-client";
 import type {
   MerchantOrderActionRequest,
   MerchantOrderActionResponse,
+  MerchantCustomerReviewResponse,
   MerchantOrderItem,
   MerchantOrderStatus,
   MerchantOrdersResponse
 } from "@/lib/api/merchant-api";
 
 const statuses: MerchantOrderStatus[] = ["new", "pending", "inService", "done", "cancelled"];
+
+type ReviewDraft = {
+  rating: string;
+  content: string;
+  publishToSquare: boolean;
+  squarePublishAnonymous: boolean;
+};
+
+const emptyReviewDraft: ReviewDraft = {
+  rating: "5",
+  content: "",
+  publishToSquare: false,
+  squarePublishAnonymous: true
+};
 
 function toCanonicalWorkflowToken(raw?: string | null): string {
   if (raw == null || raw === "") return "";
@@ -68,6 +83,19 @@ function normalizeMerchantOrderRow(row: MerchantOrderItem): MerchantOrderItem {
     (typeof r.confirmed_service_time === "string" ? r.confirmed_service_time : null) ??
     null;
 
+  const fulfillmentEvents =
+    row.fulfillmentEvents ??
+    (Array.isArray(r.fulfillment_events) ? (r.fulfillment_events as MerchantOrderItem["fulfillmentEvents"]) : undefined);
+  const settlement =
+    row.settlement ??
+    (r.settlement && typeof r.settlement === "object" ? (r.settlement as MerchantOrderItem["settlement"]) : undefined);
+  const creditImpact =
+    row.creditImpact ??
+    (r.credit_impact && typeof r.credit_impact === "object" ? (r.credit_impact as MerchantOrderItem["creditImpact"]) : undefined);
+  const pricing =
+    row.pricing ??
+    (r.pricing && typeof r.pricing === "object" ? (r.pricing as MerchantOrderItem["pricing"]) : undefined);
+
   let status = row.status;
   if (typeof r.status === "string" && r.status === "in_service") {
     status = "inService";
@@ -85,8 +113,20 @@ function normalizeMerchantOrderRow(row: MerchantOrderItem): MerchantOrderItem {
     customerPaid,
     canMerchantStartService,
     merchantNote,
-    confirmedServiceTime
+    confirmedServiceTime,
+    fulfillmentEvents,
+    settlement,
+    creditImpact,
+    pricing
   };
+}
+
+function displayValue(value: unknown) {
+  if (value == null || value === "") return "-";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
 }
 
 function rawWorkflowOf(order: MerchantOrderItem): string {
@@ -207,6 +247,16 @@ function normalizeWorkflowStatus(status?: string): MerchantOrderStatus {
   }
 }
 
+function canShowCustomerReview(order: MerchantOrderItem): boolean {
+  const w = toCanonicalWorkflowToken(rawWorkflowOf(order));
+  const explicitAllowed =
+    order.canReviewCustomer === true ||
+    order.reviewable === true ||
+    order.merchantCanReviewCustomer === true;
+  const alreadyReviewed = Boolean(order.merchantReview || order.myReview);
+  return !alreadyReviewed && (explicitAllowed || w === "customer_completed");
+}
+
 export default function MerchantOrdersPage() {
   const t = useTranslations("MerchantOrders");
   const params = useParams<{ locale: string }>();
@@ -218,6 +268,8 @@ export default function MerchantOrdersPage() {
   const [messageTone, setMessageTone] = useState<"error" | "info">("error");
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({});
   const [merchantNotes, setMerchantNotes] = useState<Record<string, string>>({});
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
+  const [reviewSubmittingNo, setReviewSubmittingNo] = useState<string | null>(null);
 
   function formatDateTime(value?: string | null) {
     if (!value) return t("unknown");
@@ -277,6 +329,13 @@ export default function MerchantOrdersPage() {
         const next = { ...current };
         nextOrders.forEach((order) => {
           next[order.orderNo] = current[order.orderNo] || order.merchantNote || "";
+        });
+        return next;
+      });
+      setReviewDrafts((current) => {
+        const next = { ...current };
+        nextOrders.forEach((order) => {
+          if (!next[order.orderNo]) next[order.orderNo] = emptyReviewDraft;
         });
         return next;
       });
@@ -435,7 +494,10 @@ export default function MerchantOrdersPage() {
                   : item.workflowStatus,
               status: normalizeWorkflowStatus(result.data.workflowStatus),
               confirmedServiceTime: result.data.confirmedServiceTime ?? item.confirmedServiceTime,
-              merchantNote: result.data.merchantNote ?? item.merchantNote
+              merchantNote: result.data.merchantNote ?? item.merchantNote,
+              fulfillmentEvents: result.data.fulfillmentEvents ?? item.fulfillmentEvents,
+              settlement: result.data.settlement ?? item.settlement,
+              creditImpact: result.data.creditImpact ?? item.creditImpact
             }
           : item
       )
@@ -457,6 +519,52 @@ export default function MerchantOrdersPage() {
       if (!window.confirm(confirmText)) return;
     }
     void updateStatus(order, "cancelled");
+  }
+
+  async function submitCustomerReview(order: MerchantOrderItem) {
+    const draft = reviewDrafts[order.orderNo] || emptyReviewDraft;
+    const rating = Number(draft.rating);
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      setMessageTone("error");
+      setMessage(t("reviewRatingRequired"));
+      return;
+    }
+    if (!draft.content.trim()) {
+      setMessageTone("error");
+      setMessage(t("reviewContentRequired"));
+      return;
+    }
+
+    setReviewSubmittingNo(order.orderNo);
+    setMessage("");
+    const result = await postJson<MerchantCustomerReviewResponse>("/api/merchant/reviews", {
+      orderNo: order.orderNo,
+      rating,
+      content: draft.content.trim(),
+      publishToSquare: draft.publishToSquare,
+      squarePublishAnonymous: draft.squarePublishAnonymous
+    });
+    setReviewSubmittingNo(null);
+    if (!result.ok) {
+      setMessageTone("error");
+      setMessage(result.message);
+      return;
+    }
+    setMessageTone("info");
+    setMessage(t("reviewSubmitted"));
+    setOrders((current) =>
+      current.map((item) =>
+        item.orderNo === order.orderNo
+          ? {
+              ...item,
+              merchantReview: result.data as Record<string, unknown>,
+              canReviewCustomer: false,
+              reviewable: false,
+              merchantCanReviewCustomer: false
+            }
+          : item
+      )
+    );
   }
 
   return (
@@ -525,6 +633,12 @@ export default function MerchantOrdersPage() {
             const addressFull = order.serviceAddress?.address?.trim() || "";
             const addressShort =
               addressFull.length > 32 ? `${addressFull.slice(0, 32)}…` : addressFull || t("unknown");
+            const fulfillmentEvents = order.fulfillmentEvents || [];
+            const settlement = order.settlement;
+            const creditImpact = order.creditImpact;
+            const pricing = order.pricing || order.pricingSnapshot;
+            const reviewDraft = reviewDrafts[order.orderNo] || emptyReviewDraft;
+            const showCustomerReview = canShowCustomerReview(order);
 
             return (
               <article className="merchant-order-card merchant-order-card--compact" key={order.orderNo}>
@@ -612,6 +726,45 @@ export default function MerchantOrdersPage() {
                         {t("orderCreatedAt")}: {formatDateTime(order.createdAt)} · {t("remark")}: {order.remark || t("unknown")}
                       </p>
                     </div>
+                    {pricing ? (
+                      <div>
+                        <p className="field-label">{t("pricing")}</p>
+                        <p className="break-words text-xs" style={{ color: "var(--muted)" }}>
+                          {displayValue(pricing)}
+                        </p>
+                      </div>
+                    ) : null}
+                    {fulfillmentEvents.length ? (
+                      <div>
+                        <p className="field-label">{t("fulfillmentEvents")}</p>
+                        <div className="space-y-1">
+                          {fulfillmentEvents.map((event, index) => (
+                            <p className="text-xs" key={`${order.orderNo}-event-${index}`} style={{ color: "var(--muted)" }}>
+                              <span className="font-semibold" style={{ color: "var(--text)" }}>
+                                {event.eventType || event.type || t("unknown")}
+                              </span>{" "}
+                              {formatDateTime(event.occurredAt || event.createdAt)} {event.title || event.note || event.description || ""}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {settlement ? (
+                      <div>
+                        <p className="field-label">{t("settlement")}</p>
+                        <p className="break-words text-xs" style={{ color: "var(--muted)" }}>
+                          {displayValue(settlement)}
+                        </p>
+                      </div>
+                    ) : null}
+                    {creditImpact ? (
+                      <div>
+                        <p className="field-label">{t("creditImpact")}</p>
+                        <p className="break-words text-xs" style={{ color: "var(--muted)" }}>
+                          {displayValue(creditImpact)}
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="space-y-0.5 text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>
                       <p>{t("paymentFrozenHint")}</p>
                       <p>{t("reviewHint")}</p>
@@ -678,6 +831,89 @@ export default function MerchantOrdersPage() {
                         {t("updateSchedule")}
                       </button>
                     </div>
+                  </div>
+                ) : null}
+
+                {showCustomerReview ? (
+                  <div className="merchant-order-action-panel merchant-order-action-panel--compact mt-2.5">
+                    <div>
+                      <label className="field-label">{t("reviewRating")}</label>
+                      <select
+                        className="field-select"
+                        value={reviewDraft.rating}
+                        onChange={(event) =>
+                          setReviewDrafts((current) => ({
+                            ...current,
+                            [order.orderNo]: {
+                              ...(current[order.orderNo] || emptyReviewDraft),
+                              rating: event.target.value
+                            }
+                          }))
+                        }
+                      >
+                        {[5, 4, 3, 2, 1].map((rating) => (
+                          <option key={rating} value={String(rating)}>
+                            {rating}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="field-label">{t("reviewContent")}</label>
+                      <textarea
+                        className="field-textarea"
+                        value={reviewDraft.content}
+                        onChange={(event) =>
+                          setReviewDrafts((current) => ({
+                            ...current,
+                            [order.orderNo]: {
+                              ...(current[order.orderNo] || emptyReviewDraft),
+                              content: event.target.value
+                            }
+                          }))
+                        }
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        checked={reviewDraft.publishToSquare}
+                        onChange={(event) =>
+                          setReviewDrafts((current) => ({
+                            ...current,
+                            [order.orderNo]: {
+                              ...(current[order.orderNo] || emptyReviewDraft),
+                              publishToSquare: event.target.checked
+                            }
+                          }))
+                        }
+                        type="checkbox"
+                      />
+                      {t("publishToSquare")}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        checked={reviewDraft.squarePublishAnonymous}
+                        onChange={(event) =>
+                          setReviewDrafts((current) => ({
+                            ...current,
+                            [order.orderNo]: {
+                              ...(current[order.orderNo] || emptyReviewDraft),
+                              squarePublishAnonymous: event.target.checked
+                            }
+                          }))
+                        }
+                        type="checkbox"
+                      />
+                      {t("squarePublishAnonymous")}
+                    </label>
+                    <button
+                      className="apple-btn-primary"
+                      disabled={reviewSubmittingNo === order.orderNo}
+                      onClick={() => submitCustomerReview(order)}
+                      type="button"
+                    >
+                      {reviewSubmittingNo === order.orderNo ? t("reviewSubmitting") : t("reviewCustomer")}
+                    </button>
                   </div>
                 ) : null}
 
