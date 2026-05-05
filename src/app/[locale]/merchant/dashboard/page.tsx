@@ -1,12 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import MerchantAvailabilityCalendar from "@/components/merchant/MerchantAvailabilityCalendar";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
-import { buildBackendUrl } from "@/lib/api/backend";
 import { MAX_LIST_LIMIT } from "@/lib/api/limits";
-import type { ApiError, ApiSuccess, MerchantOrderItem, MerchantOrdersResponse } from "@/lib/api/merchant-api";
+import type { MerchantOrderItem, MerchantOrdersResponse } from "@/lib/api/merchant-api";
+import { getMerchantBffJson } from "@/lib/api/merchant-server";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -15,37 +14,10 @@ type Props = {
 export default async function MerchantDashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("MerchantDashboard");
-  const token = (await cookies()).get("merchant_token")?.value;
-  let orderList: MerchantOrderItem[] = [];
-
-  async function fetchMerchant<T>(path: string): Promise<T | null> {
-    if (!token) return null;
-    const authorization = token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`;
-    const upstream = await fetch(buildBackendUrl(path), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authorization,
-        "X-Merchant-Token": token.replace(/^Bearer\s+/i, "")
-      },
-      cache: "no-store"
-    });
-    if (!upstream.ok) {
-      return null;
-    }
-    const payload = (await upstream.json()) as ApiSuccess<T> | ApiError;
-    if (!("data" in payload)) {
-      return null;
-    }
-    return payload.data;
-  }
-
-  if (token) {
-    const orders = await fetchMerchant<MerchantOrdersResponse>(
-      `/api/v1/merchant/orders?page=1&pageSize=${MAX_LIST_LIMIT}`
-    );
-    orderList = orders?.list || [];
-  }
+  const orders = await getMerchantBffJson<MerchantOrdersResponse>(
+    `/orders?page=1&pageSize=${MAX_LIST_LIMIT}`
+  );
+  const orderList: MerchantOrderItem[] = orders?.list || [];
 
   const totalOrders = orderList.length;
   const pendingOrders = orderList.filter(

@@ -12,18 +12,31 @@ type Props = {
   onSubmit: () => void;
 };
 
-function displayValue(value: unknown) {
+function displayValue(value: unknown): string {
   if (value == null || value === "") return "-";
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     return String(value);
   }
-  return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return value.map(displayValue).filter((item) => item !== "-").join(", ") || "-";
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const summary = record.summary ?? record.title ?? record.name ?? record.label ?? record.description;
+    if (summary != null) return displayValue(summary);
+    return Object.entries(record)
+      .filter(([, item]) => ["string", "number", "boolean"].includes(typeof item))
+      .slice(0, 4)
+      .map(([key, item]) => `${key}: ${String(item)}`)
+      .join(" · ") || "-";
+  }
+  return "-";
 }
 
 function serviceAddressText(value: MerchantCandidateItem["serviceAddress"]) {
   if (!value) return "-";
   if (typeof value === "string") return value;
-  return value.address || JSON.stringify(value);
+  return value.address || displayValue(value);
 }
 
 function quotePreviewAmount(value: MerchantCandidateItem["quotePreview"]) {
@@ -33,7 +46,23 @@ function quotePreviewAmount(value: MerchantCandidateItem["quotePreview"]) {
   const max = value.maxAmount ?? value.priceMax;
   if (amount != null) return String(amount);
   if (min != null || max != null) return `${min ?? "-"} - ${max ?? "-"}`;
-  return JSON.stringify(value);
+  return displayValue(value);
+}
+
+function candidateTitle(item: MerchantCandidateItem, fallback: string) {
+  const record = item as unknown as Record<string, unknown>;
+  const standardService = record.standardService;
+  const standardRecord =
+    standardService && typeof standardService === "object"
+      ? (standardService as Record<string, unknown>)
+      : null;
+  const title =
+    record.serviceTitle ??
+    record.title ??
+    standardRecord?.title ??
+    standardRecord?.name ??
+    standardRecord?.displayName;
+  return typeof title === "string" && title.trim() ? title : fallback;
 }
 
 export default function MerchantOrderRequestCard({
@@ -53,7 +82,7 @@ export default function MerchantOrderRequestCard({
           <p className="text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
             {item.orderNo} · {t("candidateId")} {id}
           </p>
-          <h3 className="mt-1 text-base font-semibold">{item.standardServiceCode || t("unknown")}</h3>
+          <h3 className="mt-1 text-base font-semibold">{candidateTitle(item, t("unknown"))}</h3>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
             {displayValue(item.requirementSummary)}
           </p>

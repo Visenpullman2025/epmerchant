@@ -3,9 +3,8 @@ import Image from "next/image";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
-import { buildBackendUrl } from "@/lib/api/backend";
+import { getMerchantBffJson } from "@/lib/api/merchant-server";
 import { normalizeMerchantReviewStatus } from "@/lib/merchant/verification-status";
-import type { ApiSuccess } from "@/lib/api/merchant-api";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -18,7 +17,6 @@ function statusTone(status: string) {
 }
 
 async function fetchVerificationStatus() {
-  const token = (await cookies()).get("merchant_token")?.value;
   const cookieStatus = (await cookies()).get("merchant_status")?.value;
   const fallback =
     cookieStatus === "unsubmitted" ||
@@ -27,24 +25,12 @@ async function fetchVerificationStatus() {
     cookieStatus === "pending"
       ? cookieStatus
       : "unsubmitted";
-  if (!token) return { status: fallback, reviewNote: "" };
-  const authorization = token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`;
-  const upstream = await fetch(buildBackendUrl("/api/v1/merchant/profile"), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: authorization,
-      "X-Merchant-Token": token.replace(/^Bearer\s+/i, "")
-    },
-    cache: "no-store"
-  });
-  if (upstream.status === 404) return { status: fallback, reviewNote: "" };
-  if (!upstream.ok) return { status: fallback, reviewNote: "" };
-  const payload = (await upstream.json()) as ApiSuccess<Record<string, unknown>>;
-  const status = normalizeMerchantReviewStatus(payload.data, fallback);
+  const profile = await getMerchantBffJson<Record<string, unknown>>("/profile");
+  if (!profile) return { status: fallback, reviewNote: "" };
+  const status = normalizeMerchantReviewStatus(profile, fallback);
   const verification =
-    typeof payload.data?.verification === "object" && payload.data?.verification
-      ? (payload.data.verification as Record<string, unknown>)
+    typeof profile.verification === "object" && profile.verification
+      ? (profile.verification as Record<string, unknown>)
       : null;
   const reviewNote =
     (verification &&

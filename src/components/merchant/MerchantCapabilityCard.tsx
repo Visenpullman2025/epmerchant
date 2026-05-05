@@ -33,10 +33,10 @@ export default function MerchantCapabilityCard({ item, t, onEdit }: Props) {
       </div>
       <div className="merchant-order-detail-rows mt-3">
         <Detail label={t("readyStatus")} value={item.readyStatus || "-"} />
-        <Detail label={t("serviceArea")} value={displayValue(item.serviceArea)} />
-        <Detail label={t("extraDistanceRule")} value={displayValue(item.extraDistanceRule)} />
-        <Detail label={t("capacityRule")} value={displayValue(item.capacityRule)} />
-        <Detail label={t("timeSlots")} value={displayValue(item.timeSlots)} />
+        <Detail label={t("serviceArea")} value={displayConfig(item.serviceArea)} />
+        <Detail label={t("extraDistanceRule")} value={displayConfig(item.extraDistanceRule)} />
+        <Detail label={t("capacityRule")} value={displayConfig(item.capacityRule)} />
+        <Detail label={t("timeSlots")} value={displayConfig(item.timeSlots)} />
         <Detail label={t("openDates")} value={(item.openDates || []).join(", ") || "-"} />
       </div>
       <button className="apple-btn-secondary mt-3" onClick={() => onEdit(item)} type="button">
@@ -46,10 +46,21 @@ export default function MerchantCapabilityCard({ item, t, onEdit }: Props) {
   );
 }
 
-function displayValue(value: unknown) {
+function displayConfig(value: unknown): string {
   if (value == null || value === "") return "-";
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    const scalars = value.filter((item) => ["string", "number", "boolean"].includes(typeof item));
+    return scalars.length ? scalars.join(", ") : value.length ? `${value.length}` : "-";
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => ["string", "number", "boolean"].includes(typeof item))
+      .slice(0, 4)
+      .map(([key, item]) => `${key}: ${String(item)}`);
+    return entries.join(" · ") || "-";
+  }
+  return "-";
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
