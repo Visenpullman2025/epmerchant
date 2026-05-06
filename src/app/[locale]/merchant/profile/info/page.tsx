@@ -25,6 +25,11 @@ export default function MerchantProfileInfoPage() {
   const [phone, setPhone] = useState("");
   const [intro, setIntro] = useState("");
   const [online, setOnline] = useState(false);
+  const [baseAddress, setBaseAddress] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const [serviceRadiusMeters, setServiceRadiusMeters] = useState("8000");
+  const [areas, setAreas] = useState("");
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -49,6 +54,15 @@ export default function MerchantProfileInfoPage() {
       setPhone(result.data.contactPhone);
       setIntro(result.data.serviceIntro || "");
       setOnline(result.data.online ?? true);
+      setBaseAddress(result.data.location?.baseAddress || "");
+      setLat(result.data.location?.lat != null ? String(result.data.location.lat) : "");
+      setLng(result.data.location?.lng != null ? String(result.data.location.lng) : "");
+      setServiceRadiusMeters(
+        result.data.location?.serviceRadiusMeters != null
+          ? String(result.data.location.serviceRadiusMeters)
+          : "8000"
+      );
+      setAreas((result.data.location?.areas || []).join(", "));
       const profileServiceTypes = result.data.serviceTypes || [];
       setSelectedCodes(profileServiceTypes);
 
@@ -68,11 +82,32 @@ export default function MerchantProfileInfoPage() {
 
   async function onSave() {
     setMessage("");
+    const latValue = lat.trim() ? Number(lat) : null;
+    const lngValue = lng.trim() ? Number(lng) : null;
+    const radiusValue = serviceRadiusMeters.trim() ? Number(serviceRadiusMeters) : null;
+    if ((latValue != null && !Number.isFinite(latValue)) || (lngValue != null && !Number.isFinite(lngValue))) {
+      setMessage(t("locationCoordinateInvalid"));
+      return;
+    }
+    if (radiusValue != null && (!Number.isInteger(radiusValue) || radiusValue < 500)) {
+      setMessage(t("serviceRadiusInvalid"));
+      return;
+    }
     const result = await postJson<MerchantProfileUpdateResponse>("/api/merchant/profile", {
       merchantName,
       contactPhone: phone,
       serviceIntro: intro,
-      online
+      online,
+      location: {
+        baseAddress,
+        lat: latValue,
+        lng: lngValue,
+        serviceRadiusMeters: radiusValue,
+        areas: areas
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      }
     });
     if (!result.ok) {
       setMessage(result.message);
@@ -142,6 +177,36 @@ export default function MerchantProfileInfoPage() {
         <div>
           <label className="field-label">{t("intro")}</label>
           <textarea className="field-textarea" onChange={(e) => setIntro(e.target.value)} value={intro} />
+        </div>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border p-3" style={{ borderColor: "var(--border)" }}>
+          <p className="field-label">{t("locationSectionTitle")}</p>
+          <div>
+            <label className="field-label">{t("baseAddress")}</label>
+            <input className="field-input" onChange={(e) => setBaseAddress(e.target.value)} value={baseAddress} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="field-label">{t("lat")}</label>
+              <input className="field-input" inputMode="decimal" onChange={(e) => setLat(e.target.value)} value={lat} />
+            </div>
+            <div>
+              <label className="field-label">{t("lng")}</label>
+              <input className="field-input" inputMode="decimal" onChange={(e) => setLng(e.target.value)} value={lng} />
+            </div>
+          </div>
+          <div>
+            <label className="field-label">{t("serviceRadiusMeters")}</label>
+            <input
+              className="field-input"
+              inputMode="numeric"
+              onChange={(e) => setServiceRadiusMeters(e.target.value)}
+              value={serviceRadiusMeters}
+            />
+          </div>
+          <div>
+            <label className="field-label">{t("serviceAreas")}</label>
+            <input className="field-input" onChange={(e) => setAreas(e.target.value)} value={areas} />
+          </div>
         </div>
         <div className="rounded-xl border p-3" style={{ borderColor: "var(--border)" }}>
           <p className="field-label mb-2">{t("onlineStatus")}</p>

@@ -119,10 +119,10 @@ export default function MerchantProfileVerificationPage() {
     const result = await postJson<MerchantVerificationResponse>("/api/merchant/verification", {
       ownerName,
       idNumber,
-      business_license_url: businessLicenseUrl || undefined,
-      documentFrontUrl: documentFrontUrl || undefined,
-      documentBackUrl: documentBackUrl || undefined,
-      selfieUrl: selfieUrl || undefined
+      businessLicenseUrl,
+      documentFrontUrl,
+      documentBackUrl,
+      selfieUrl
     });
     setVerificationSaving(false);
     if (!result.ok) {

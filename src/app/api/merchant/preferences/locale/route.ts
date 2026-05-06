@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         : `Bearer ${token}`
       : "";
 
-    const upstream = await fetch(buildBackendUrl("/api/v1/me/locale"), {
+    const upstream = await fetch(buildBackendUrl("/api/v1/merchant/preferences/locale"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

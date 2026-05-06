@@ -4,6 +4,9 @@ import { proxyToBackend } from "@/lib/api/proxy";
 
 /** BFF `/api/merchant/...` → Laravel `/api/v1/merchant/...`（`services/:id/create-data` 走公共 `/api/v1/services/...`） */
 export function buildMerchantUpstreamPath(segments: string[]): string {
+  if (segments.length === 1 && segments[0] === "standard-services") {
+    return "/api/v1/standard-services";
+  }
   if (
     segments[0] === "services" &&
     segments.length === 3 &&

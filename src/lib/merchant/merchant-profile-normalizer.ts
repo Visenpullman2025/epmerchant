@@ -30,6 +30,45 @@ function normalizeBoundCategories(value: unknown) {
     .filter(Boolean) as { code: string; name: string }[];
 }
 
+function toNumberOrNull(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  return null;
+}
+
+function normalizeLocation(value: unknown): MerchantProfileResponse["location"] {
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const lat = toNumberOrNull(record.lat);
+  const lng = toNumberOrNull(record.lng);
+  return {
+    baseAddress:
+      (typeof record.baseAddress === "string" && record.baseAddress) ||
+      (typeof record.base_address === "string" && record.base_address) ||
+      "",
+    placeId:
+      (typeof record.placeId === "string" && record.placeId) ||
+      (typeof record.place_id === "string" && record.place_id) ||
+      "",
+    lat,
+    lng,
+    serviceRadiusMeters:
+      toNumberOrNull(record.serviceRadiusMeters) ?? toNumberOrNull(record.service_radius_meters),
+    areas: normalizeStringArray(record.areas),
+    locationVerified:
+      typeof record.locationVerified === "boolean"
+        ? record.locationVerified
+        : typeof record.location_verified === "boolean"
+          ? record.location_verified
+          : lat != null && lng != null,
+    updatedAt:
+      (typeof record.updatedAt === "string" && record.updatedAt) ||
+      (typeof record.updated_at === "string" && record.updated_at) ||
+      null
+  };
+}
+
 /** 将上游 profile 原始 data 转为商户端统一 `MerchantProfileResponse` */
 export function normalizeMerchantProfilePayload(
   data: Record<string, unknown>,
@@ -87,6 +126,7 @@ export function normalizeMerchantProfilePayload(
       (typeof data.service_intro === "string" && data.service_intro) ||
       "",
     online: typeof data.online === "boolean" ? data.online : true,
+    location: normalizeLocation(data.location),
     verification: verificationRaw
       ? {
           applicationNo:

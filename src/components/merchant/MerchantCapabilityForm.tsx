@@ -1,10 +1,13 @@
 "use client";
 
 import type { CapabilityDraft } from "@/components/merchant/MerchantCapabilityManager";
+import type { MerchantStandardServiceItem } from "@/lib/api/merchant-api";
 
 type Props = {
   draft: CapabilityDraft;
   saving: boolean;
+  servicesLoading: boolean;
+  standardServices: MerchantStandardServiceItem[];
   t: (key: string) => string;
   onChange: (draft: CapabilityDraft) => void;
   onSave: () => void;
@@ -14,6 +17,8 @@ type Props = {
 export default function MerchantCapabilityForm({
   draft,
   saving,
+  servicesLoading,
+  standardServices,
   t,
   onChange,
   onSave,
@@ -23,11 +28,23 @@ export default function MerchantCapabilityForm({
     <section className="merchant-order-action-panel">
       <div>
         <label className="field-label">{t("standardServiceCode")}</label>
-        <input
-          className="field-input"
+        <select
+          className="field-select"
+          disabled={servicesLoading}
           value={draft.standardServiceCode}
           onChange={(event) => onChange({ ...draft, standardServiceCode: event.target.value })}
-        />
+        >
+          <option value="">{servicesLoading ? t("standardServicesLoading") : t("selectStandardService")}</option>
+          {draft.standardServiceCode &&
+          !standardServices.some((service) => service.standardServiceCode === draft.standardServiceCode) ? (
+            <option value={draft.standardServiceCode}>{t("configuredStandardService")}</option>
+          ) : null}
+          {standardServices.map((service) => (
+            <option key={service.standardServiceCode} value={service.standardServiceCode}>
+              {service.name}
+            </option>
+          ))}
+        </select>
       </div>
       <label className="flex items-center gap-2 text-sm font-semibold">
         <input

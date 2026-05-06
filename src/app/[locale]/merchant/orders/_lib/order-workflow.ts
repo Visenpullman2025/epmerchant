@@ -8,6 +8,7 @@ export function toCanonicalWorkflowToken(raw?: string | null): string {
     case "merchant_confirmed":
       return "merchantConfirmed";
     case "in_service":
+    case "after_sales":
       return "inService";
     case "merchant_done":
       return "merchantDone";
@@ -63,6 +64,7 @@ export function isAwaitingMerchantStart(order: MerchantOrderItem): boolean {
   if (
     w === "inService" ||
     w === "merchantDone" ||
+    w === "after_sales" ||
     w === "done" ||
     w === "customer_completed" ||
     w === "customerConfirmed" ||

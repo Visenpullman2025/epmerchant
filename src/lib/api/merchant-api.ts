@@ -72,6 +72,16 @@ export type MerchantProfileResponse = {
     code: string;
     name: string;
   }[];
+  location?: {
+    baseAddress: string;
+    placeId?: string;
+    lat: number | null;
+    lng: number | null;
+    serviceRadiusMeters: number | null;
+    areas: string[];
+    locationVerified: boolean;
+    updatedAt?: string | null;
+  };
   verification?: {
     applicationNo?: string;
     ownerName?: string;
@@ -92,25 +102,36 @@ export type MerchantProfileUpdateRequest = {
   serviceIntro?: string;
   online?: boolean;
   serviceTypes?: string[];
+  location?: {
+    baseAddress?: string;
+    placeId?: string;
+    lat?: number | null;
+    lng?: number | null;
+    serviceRadiusMeters?: number | null;
+    areas?: string[];
+  };
 };
 
 export type MerchantProfileUpdateResponse = {
   updated: true;
   serviceTypes?: string[];
+  location?: MerchantProfileResponse["location"];
 };
 
 export type MerchantVerificationRequest = {
   ownerName: string;
   idNumber: string;
-  business_license_url?: string;
-  documentFrontUrl?: string;
-  documentBackUrl?: string;
-  selfieUrl?: string;
+  businessLicenseUrl: string;
+  documentFrontUrl: string;
+  documentBackUrl: string;
+  selfieUrl: string;
 };
 
 export type MerchantVerificationResponse = {
   status: "pending" | "approved" | "rejected";
   applicationNo: string;
+  submittedAt?: string;
+  editable?: boolean;
 };
 
 export type MerchantOrderStatus = "new" | "pending" | "inService" | "done" | "cancelled";
@@ -214,8 +235,12 @@ export type MerchantOrderActionResponse = {
   confirmedServiceTime?: string | null;
   merchantNote?: string | null;
   fulfillmentEvents?: MerchantFulfillmentEvent[];
+  failureEvent?: MerchantFulfillmentEvent | Record<string, unknown> | null;
   settlement?: MerchantOrderSettlement | Record<string, unknown> | null;
   creditImpact?: MerchantCreditImpact | Record<string, unknown> | null;
+  allowedNextActions?: string[];
+  nextAction?: string | null;
+  customerVisibleMessage?: string | null;
   /** 服务中取消等场景下可选，以后端为准 */
   penaltyAmount?: string | null;
   penaltyRate?: string | number | null;
@@ -406,6 +431,17 @@ export type MerchantCapabilityItem = {
   matchingPolicyCode?: string | null;
   workflowPolicyCode?: string | null;
 };
+
+export type MerchantStandardServiceItem = {
+  standardServiceCode: string;
+  name: string;
+  description?: string;
+  categoryCode?: string;
+  imageUrl?: string | null;
+  sortOrder?: number;
+};
+
+export type MerchantStandardServicesResponse = MerchantStandardServiceItem[];
 
 export type MerchantCapabilitiesResponse = {
   list: MerchantCapabilityItem[];

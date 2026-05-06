@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import MerchantCapabilityCard from "@/components/merchant/MerchantCapabilityCard";
 import MerchantCapabilityForm from "@/components/merchant/MerchantCapabilityForm";
 import { getJson, postJson, putJson } from "@/lib/merchant/auth-client";
 import type {
   MerchantCapabilitiesResponse,
   MerchantCapabilityItem,
-  MerchantCapabilitySaveResponse
+  MerchantCapabilitySaveResponse,
+  MerchantStandardServiceItem,
+  MerchantStandardServicesResponse
 } from "@/lib/api/merchant-api";
 
 export type CapabilityDraft = {
@@ -87,8 +89,11 @@ function parseDateList(value: string) {
 }
 
 export default function MerchantCapabilityManager() {
+  const locale = useLocale();
   const t = useTranslations("MerchantCapabilities");
   const [items, setItems] = useState<MerchantCapabilityItem[]>([]);
+  const [standardServices, setStandardServices] = useState<MerchantStandardServiceItem[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
   const [draft, setDraft] = useState<CapabilityDraft>(emptyDraft);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -115,11 +120,32 @@ export default function MerchantCapabilityManager() {
     const timer = window.setTimeout(() => {
       void loadCapabilities(active);
     }, 0);
+    async function loadStandardServices() {
+      setServicesLoading(true);
+      const result = await getJson<MerchantStandardServicesResponse>(
+        `/api/merchant/standard-services?locale=${encodeURIComponent(locale)}`
+      );
+      if (!active) return;
+      setServicesLoading(false);
+      if (!result.ok) {
+        setMessageTone("error");
+        setMessage(t("standardServicesLoadFailed"));
+        return;
+      }
+      setStandardServices(result.data || []);
+    }
+    void loadStandardServices();
     return () => {
       active = false;
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [locale, t]);
+
+  const standardServiceNameByCode = useMemo(() => {
+    return new Map(
+      standardServices.map((service) => [service.standardServiceCode, service.name] as const)
+    );
+  }, [standardServices]);
 
   async function saveCapability() {
     setMessage("");
@@ -185,6 +211,8 @@ export default function MerchantCapabilityManager() {
       <MerchantCapabilityForm
         draft={draft}
         saving={saving}
+        servicesLoading={servicesLoading}
+        standardServices={standardServices}
         t={t}
         onCancel={() => setDraft(emptyDraft)}
         onChange={setDraft}
@@ -206,6 +234,7 @@ export default function MerchantCapabilityManager() {
           <MerchantCapabilityCard
             item={item}
             key={String(item.capabilityId)}
+            standardServiceName={standardServiceNameByCode.get(item.standardServiceCode)}
             t={t}
             onEdit={(capability) => setDraft(draftFromCapability(capability))}
           />

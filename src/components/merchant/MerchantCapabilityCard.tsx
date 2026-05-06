@@ -4,11 +4,12 @@ import type { MerchantCapabilityItem } from "@/lib/api/merchant-api";
 
 type Props = {
   item: MerchantCapabilityItem;
+  standardServiceName?: string;
   t: (key: string) => string;
   onEdit: (item: MerchantCapabilityItem) => void;
 };
 
-export default function MerchantCapabilityCard({ item, t, onEdit }: Props) {
+export default function MerchantCapabilityCard({ item, standardServiceName, t, onEdit }: Props) {
   return (
     <article className="merchant-order-card">
       <div className="flex items-start justify-between gap-3">
@@ -16,7 +17,7 @@ export default function MerchantCapabilityCard({ item, t, onEdit }: Props) {
           <p className="text-[11px]" style={{ color: "var(--muted)" }}>
             {t("capabilityId")}: {item.capabilityId}
           </p>
-          <h3 className="mt-1 text-base font-semibold">{item.standardServiceCode}</h3>
+          <h3 className="mt-1 text-base font-semibold">{standardServiceName || t("configuredStandardService")}</h3>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
             {t("status")}: {item.status || "-"} · {t("reviewState")}: {item.reviewState || "-"}
           </p>
