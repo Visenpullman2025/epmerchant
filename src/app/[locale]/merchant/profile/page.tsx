@@ -66,15 +66,10 @@ export default function MerchantProfileHubPage() {
 
   return (
     <MerchantScaffold
-      brand={t("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={t("heroAlt")}
-      heroSrc="/images/merchant-onboarding-hero.svg"
-      subtitle=""
-      title={t("hubTitle")}
-      topRight={<span className="text-xs" style={{ color: "var(--muted)" }}>{t("settings")}</span>}
+      surface={false}
     >
-      <div className="mt-4 space-y-5">
+      <div className="merchant-profile-page space-y-4">
         {message ? (
           <div className="rounded-xl border p-3 text-sm" style={{ borderColor: "var(--danger)", color: "var(--danger)" }}>
             {message}
@@ -86,7 +81,7 @@ export default function MerchantProfileHubPage() {
           </div>
         ) : (
           <>
-            <article className="merchant-profile-hub-surface">
+            <section className="merchant-profile-summary">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="truncate text-lg font-semibold tracking-tight">{merchantName || "—"}</h2>
@@ -119,7 +114,7 @@ export default function MerchantProfileHubPage() {
                   ฿ {balanceDisplay ?? t("balanceUnavailable")}
                 </p>
               </div>
-            </article>
+            </section>
 
             <div className="space-y-3">
               <div>
@@ -153,19 +148,13 @@ export default function MerchantProfileHubPage() {
                     feature="balance"
                     glyphColor={THAI_BLUE}
                     href={`/${locale}/merchant/wallet`}
-                    title={t("menuBalance")}
+                    title={t("menuWallet")}
                   />
                   <MerchantProfileMenuRow
                     feature="flow"
                     glyphColor={THAI_RED}
                     href={`/${locale}/merchant/credit-profile`}
                     title={t("menuCredit")}
-                  />
-                  <MerchantProfileMenuRow
-                    feature="flow"
-                    glyphColor={THAI_BLUE}
-                    href={`/${locale}/merchant/wallet#wallet-records`}
-                    title={t("menuFlow")}
                   />
                 </div>
               </div>
@@ -176,14 +165,20 @@ export default function MerchantProfileHubPage() {
                   <MerchantProfileMenuRow
                     feature="orders"
                     glyphColor={THAI_BLUE}
-                    href={`/${locale}/merchant/order-requests`}
-                    title={t("menuOrders")}
+                    href={`/${locale}/merchant/orders?status=done`}
+                    title={t("menuOrderHistory")}
                   />
                   <MerchantProfileMenuRow
                     feature="services"
                     glyphColor={THAI_RED}
                     href={`/${locale}/merchant/capabilities`}
                     title={t("menuServices")}
+                  />
+                  <MerchantProfileMenuRow
+                    feature="flow"
+                    glyphColor={THAI_BLUE}
+                    href={`/${locale}/merchant/square`}
+                    title={t("menuMessages")}
                   />
                 </div>
               </div>

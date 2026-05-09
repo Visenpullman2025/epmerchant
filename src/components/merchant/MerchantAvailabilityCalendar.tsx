@@ -239,9 +239,6 @@ export default function MerchantAvailabilityCalendar({ locale }: MerchantAvailab
   return (
     <article className="apple-card">
       <h2 className="text-base font-semibold">{t("title")}</h2>
-      <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-        {t("description")}
-      </p>
       {backendMissing ? (
         <p className="mt-2 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
           {t("syncPending")}
@@ -312,9 +309,6 @@ export default function MerchantAvailabilityCalendar({ locale }: MerchantAvailab
           </div>
         </div>
       )}
-      <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
-        {t("legend")}
-      </p>
       {fullyBookedDates.size > 0 ? (
         <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
           {t("fullyBookedLegend")}

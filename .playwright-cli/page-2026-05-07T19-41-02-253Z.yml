@@ -1,0 +1,56 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e25] [cursor=pointer]:
+    - img [ref=e26]
+  - alert [ref=e29]
+  - main [ref=e479]:
+    - generic [ref=e480]:
+      - generic [ref=e481]:
+        - heading "基础资料" [level=1] [ref=e482]
+        - link "返回" [ref=e484] [cursor=pointer]:
+          - /url: /zh/merchant/profile
+      - generic [ref=e485]:
+        - generic [ref=e486]: 资料加载中...
+        - generic [ref=e487]:
+          - generic [ref=e488]: 商家名称
+          - textbox [ref=e489]
+        - generic [ref=e490]:
+          - generic [ref=e491]: 联系电话
+          - textbox [ref=e492]
+        - generic [ref=e493]:
+          - generic [ref=e494]: 服务介绍
+          - textbox [ref=e495]
+        - generic [ref=e496]:
+          - paragraph [ref=e497]: 服务位置
+          - generic [ref=e498]:
+            - generic [ref=e499]: 营业地址
+            - textbox [ref=e500]
+          - generic [ref=e501]:
+            - generic [ref=e502]:
+              - generic [ref=e503]: 纬度
+              - textbox [ref=e504]
+            - generic [ref=e505]:
+              - generic [ref=e506]: 经度
+              - textbox [ref=e507]
+          - generic [ref=e508]:
+            - generic [ref=e509]: 服务半径（米）
+            - textbox [ref=e510]: "8000"
+          - generic [ref=e511]:
+            - generic [ref=e512]: 服务区域
+            - textbox [ref=e513]
+        - generic [ref=e514]:
+          - paragraph [ref=e515]: 在线状态
+          - generic [ref=e516]:
+            - button "在线接单" [ref=e517] [cursor=pointer]
+            - button "暂不接单" [ref=e518] [cursor=pointer]
+        - button "保存资料" [ref=e519] [cursor=pointer]
+    - navigation [ref=e520]:
+      - link "总览" [ref=e521] [cursor=pointer]:
+        - /url: /zh/merchant/dashboard
+      - link "待办" [ref=e522] [cursor=pointer]:
+        - /url: /zh/merchant/order-requests
+      - link "能力" [ref=e523] [cursor=pointer]:
+        - /url: /zh/merchant/capabilities
+      - link "广场" [ref=e524] [cursor=pointer]:
+        - /url: /zh/merchant/square
+      - link "资料" [ref=e525] [cursor=pointer]:
+        - /url: /zh/merchant/profile

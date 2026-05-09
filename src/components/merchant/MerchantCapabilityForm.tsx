@@ -1,6 +1,6 @@
 "use client";
 
-import type { CapabilityDraft } from "@/components/merchant/MerchantCapabilityManager";
+import type { CapabilityDraft } from "@/components/merchant/merchant-capability-utils";
 import type { MerchantStandardServiceItem } from "@/lib/api/merchant-api";
 
 type Props = {
@@ -24,6 +24,16 @@ export default function MerchantCapabilityForm({
   onSave,
   onCancel
 }: Props) {
+  const standardServiceOptions = Array.from(
+    standardServices.reduce((map, service) => {
+      const displayKey = service.name.trim() || service.standardServiceCode;
+      if (!map.has(displayKey)) {
+        map.set(displayKey, service);
+      }
+      return map;
+    }, new Map<string, MerchantStandardServiceItem>()).values()
+  );
+
   return (
     <section className="merchant-order-action-panel">
       <div>
@@ -36,10 +46,10 @@ export default function MerchantCapabilityForm({
         >
           <option value="">{servicesLoading ? t("standardServicesLoading") : t("selectStandardService")}</option>
           {draft.standardServiceCode &&
-          !standardServices.some((service) => service.standardServiceCode === draft.standardServiceCode) ? (
+          !standardServiceOptions.some((service) => service.standardServiceCode === draft.standardServiceCode) ? (
             <option value={draft.standardServiceCode}>{t("configuredStandardService")}</option>
           ) : null}
-          {standardServices.map((service) => (
+          {standardServiceOptions.map((service) => (
             <option key={service.standardServiceCode} value={service.standardServiceCode}>
               {service.name}
             </option>
@@ -66,27 +76,32 @@ export default function MerchantCapabilityForm({
           <option value="paused">{t("readyStatusPaused")}</option>
         </select>
       </div>
-      <JsonField label={t("serviceArea")} value={draft.serviceArea} onChange={(serviceArea) => onChange({ ...draft, serviceArea })} />
-      <JsonField
-        label={t("basePricingRule")}
-        value={draft.basePricingRule}
-        onChange={(basePricingRule) => onChange({ ...draft, basePricingRule })}
-      />
-      <JsonField
-        label={t("extraDistanceRule")}
-        value={draft.extraDistanceRule}
-        onChange={(extraDistanceRule) => onChange({ ...draft, extraDistanceRule })}
-      />
-      <JsonField
-        label={t("capacityRule")}
-        value={draft.capacityRule}
-        onChange={(capacityRule) => onChange({ ...draft, capacityRule })}
-      />
-      <JsonField
-        label={t("timeSlots")}
-        value={draft.timeSlots}
-        onChange={(timeSlots) => onChange({ ...draft, timeSlots })}
-      />
+      <details className="merchant-advanced-fields">
+        <summary>{t("advancedRules")}</summary>
+        <div className="mt-3 space-y-3">
+          <JsonField label={t("serviceArea")} value={draft.serviceArea} onChange={(serviceArea) => onChange({ ...draft, serviceArea })} />
+          <JsonField
+            label={t("basePricingRule")}
+            value={draft.basePricingRule}
+            onChange={(basePricingRule) => onChange({ ...draft, basePricingRule })}
+          />
+          <JsonField
+            label={t("extraDistanceRule")}
+            value={draft.extraDistanceRule}
+            onChange={(extraDistanceRule) => onChange({ ...draft, extraDistanceRule })}
+          />
+          <JsonField
+            label={t("capacityRule")}
+            value={draft.capacityRule}
+            onChange={(capacityRule) => onChange({ ...draft, capacityRule })}
+          />
+          <JsonField
+            label={t("timeSlots")}
+            value={draft.timeSlots}
+            onChange={(timeSlots) => onChange({ ...draft, timeSlots })}
+          />
+        </div>
+      </details>
       <div>
         <label className="field-label">{t("openDates")}</label>
         <input

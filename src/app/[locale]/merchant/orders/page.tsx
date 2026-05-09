@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
@@ -8,22 +9,26 @@ import MerchantOrderCard from "./_components/MerchantOrderCard";
 import StatusBox from "./_components/StatusBox";
 import { merchantOrderStatuses } from "./_lib/order-workflow";
 import { useMerchantOrdersController } from "./_lib/use-merchant-orders-controller";
+import type { MerchantOrderStatus } from "@/lib/api/merchant-api";
 
 export default function MerchantOrdersPage() {
   const t = useTranslations("MerchantOrders");
   const params = useParams<{ locale: string }>();
   const locale = params.locale || "zh";
-  const orders = useMerchantOrdersController(t);
+  const [initialStatus, setInitialStatus] = useState<MerchantOrderStatus>("new");
+  const orders = useMerchantOrdersController(t, initialStatus);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setInitialStatus(readOrderStatus(new URLSearchParams(window.location.search).get("status")));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <MerchantScaffold
-      brand={t("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={t("heroAlt")}
-      heroSrc="/images/merchant-dashboard-hero.svg"
-      subtitle={orders.activeStatus === "inService" ? t("subtitleInService") : ""}
       title={t("title")}
-      topRight={<span className="text-xs" style={{ color: "var(--muted)" }}>{t("live")}</span>}
     >
       <div className="mt-4 flex flex-wrap gap-2">
         {merchantOrderStatuses.map((status) => (
@@ -67,4 +72,8 @@ export default function MerchantOrdersPage() {
       </div>
     </MerchantScaffold>
   );
+}
+
+function readOrderStatus(value: string | null): MerchantOrderStatus {
+  return merchantOrderStatuses.includes(value as MerchantOrderStatus) ? (value as MerchantOrderStatus) : "new";
 }

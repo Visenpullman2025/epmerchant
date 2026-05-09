@@ -1,35 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import MerchantOrderRequestCard from "@/components/merchant/MerchantOrderRequestCard";
-import { getJson, postJson } from "@/lib/merchant/auth-client";
+import { getJson } from "@/lib/merchant/auth-client";
 import type {
   MerchantCandidateItem,
   MerchantOrderRequestsResponse,
-  MerchantQuoteConfirmationResponse
+  LocaleCode
 } from "@/lib/api/merchant-api";
 
-export type QuoteDraft = {
-  finalAmount: string;
-  confirmedServiceTime: string;
-  merchantNote: string;
-  validUntil: string;
-};
-
-const emptyQuoteDraft: QuoteDraft = {
-  finalAmount: "",
-  confirmedServiceTime: "",
-  merchantNote: "",
-  validUntil: ""
-};
-
 export default function MerchantOrderRequestsBoard() {
+  const locale = useLocale() as LocaleCode;
   const t = useTranslations("MerchantOrderRequests");
   const [items, setItems] = useState<MerchantCandidateItem[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, QuoteDraft>>({});
   const [loading, setLoading] = useState(true);
-  const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"error" | "info">("error");
 
@@ -45,18 +30,7 @@ export default function MerchantOrderRequestsBoard() {
       return;
     }
     setMessage("");
-    const nextItems = result.data.list || [];
-    setItems(nextItems);
-    setDrafts((current) => {
-      const next = { ...current };
-      nextItems.forEach((item) => {
-        const id = String(item.candidateId);
-        if (!next[id]) {
-          next[id] = emptyQuoteDraft;
-        }
-      });
-      return next;
-    });
+    setItems(result.data.list || []);
   }
 
   useEffect(() => {
@@ -69,43 +43,6 @@ export default function MerchantOrderRequestsBoard() {
       window.clearTimeout(timer);
     };
   }, []);
-
-  async function submitQuote(item: MerchantCandidateItem) {
-    const id = String(item.candidateId);
-    const draft = drafts[id];
-    const amount = Number(draft?.finalAmount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setMessageTone("error");
-      setMessage(t("amountRequired"));
-      return;
-    }
-    if (!draft?.confirmedServiceTime) {
-      setMessageTone("error");
-      setMessage(t("timeRequired"));
-      return;
-    }
-
-    setSubmittingId(id);
-    setMessage("");
-    const result = await postJson<MerchantQuoteConfirmationResponse>(
-      `/api/merchant/order-requests/${encodeURIComponent(id)}/quote-confirmation`,
-      {
-        finalAmount: amount,
-        confirmedServiceTime: draft.confirmedServiceTime,
-        merchantNote: draft.merchantNote.trim() || undefined,
-        validUntil: draft.validUntil || undefined
-      }
-    );
-    setSubmittingId(null);
-    if (!result.ok) {
-      setMessageTone("error");
-      setMessage(result.message);
-      return;
-    }
-    setMessageTone("info");
-    setMessage(t("submitted"));
-    void loadRequests();
-  }
 
   return (
     <div className="mt-4 space-y-3">
@@ -135,22 +72,14 @@ export default function MerchantOrderRequestsBoard() {
 
       {items.map((item) => {
         const id = String(item.candidateId);
-        const draft = drafts[id] || emptyQuoteDraft;
 
         return (
           <MerchantOrderRequestCard
-            draft={draft}
+            detailHref={`/${locale}/merchant/order-requests/${encodeURIComponent(id)}`}
             item={item}
             key={id}
-            submitting={submittingId === id}
+            locale={locale}
             t={t}
-            onDraftChange={(nextDraft) =>
-              setDrafts((current) => ({
-                ...current,
-                [id]: nextDraft
-              }))
-            }
-            onSubmit={() => submitQuote(item)}
           />
         );
       })}

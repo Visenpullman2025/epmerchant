@@ -44,14 +44,7 @@ export default function MerchantLoginPage() {
   }
 
   return (
-    <MerchantScaffold
-      brand={t("brand")}
-      heroAlt={t("loginHeroAlt")}
-      heroSrc="/images/merchant-auth-hero.svg"
-      subtitle={t("loginDesc")}
-      title={t("loginTitle")}
-      topRight={<span className="text-xs" style={{ color: "var(--muted)" }}>{t("secure")}</span>}
-    >
+    <MerchantScaffold title={t("loginTitle")}>
       <div className="mt-4 flex items-center justify-between">
         <div className="merchant-segment">
           <button className="merchant-segment-item active" type="button">
@@ -62,42 +55,42 @@ export default function MerchantLoginPage() {
           </Link>
         </div>
       </div>
-        <form className="mt-4 space-y-3" onSubmit={onSubmit}>
-          <div>
-            <label className="field-label">{t("email")}</label>
-            <input
-              className="field-input"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="field-label">{t("password")}</label>
-            <input
-              className="field-input"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </div>
-          {error ? (
-            <p className="text-sm" style={{ color: "#ef4444" }}>
-              {error}
-            </p>
-          ) : null}
-          <button className="apple-btn-primary w-full" disabled={loading} type="submit">
-            {loading ? t("submitting") : t("login")}
-          </button>
-        </form>
-        <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
-          {t("noAccount")}{" "}
-          <Link className="underline" href={`/${locale}/merchant/register`}>
-            {t("goRegister")}
-          </Link>
-        </p>
+      <form className="mt-4 space-y-3" onSubmit={onSubmit}>
+        <div>
+          <label className="field-label">{t("email")}</label>
+          <input
+            className="field-input"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="field-label">{t("password")}</label>
+          <input
+            className="field-input"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </div>
+        {error ? (
+          <p className="text-sm" style={{ color: "#ef4444" }}>
+            {error}
+          </p>
+        ) : null}
+        <button className="apple-btn-primary w-full" disabled={loading} type="submit">
+          {loading ? t("submitting") : t("login")}
+        </button>
+      </form>
+      <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
+        {t("noAccount")}{" "}
+        <Link className="underline" href={`/${locale}/merchant/register`}>
+          {t("goRegister")}
+        </Link>
+      </p>
     </MerchantScaffold>
   );
 }

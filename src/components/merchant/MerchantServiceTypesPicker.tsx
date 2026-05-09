@@ -31,6 +31,7 @@ export default function MerchantServiceTypesPicker({
           const selected = selectedCodes.includes(category.code);
           return (
             <button
+              aria-pressed={selected}
               key={category.code}
               type="button"
               className={`rounded-xl border px-3 py-3 text-left text-sm ${selected ? "text-white" : ""}`}
@@ -41,7 +42,6 @@ export default function MerchantServiceTypesPicker({
               onClick={() => onToggle(category.code)}
             >
               <div className="font-semibold">{category.name}</div>
-              <div className="mt-1 opacity-80">{category.code}</div>
             </button>
           );
         })}

@@ -11,7 +11,6 @@ import { toggleFollowAuthor } from "@/lib/square/client";
 
 export default function MerchantSquareAuthorPage() {
   const t = useTranslations("SquareAuthorPage");
-  const tAuth = useTranslations("MerchantAuth");
   const params = useParams<{ locale: string; authorId: string }>();
   const locale = params.locale || "zh";
   const authorId = params.authorId;
@@ -44,14 +43,10 @@ export default function MerchantSquareAuthorPage() {
 
   return (
     <MerchantScaffold
-      brand={tAuth("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={tAuth("brand")}
-      heroSrc="/images/merchant-dashboard-hero.svg"
-      subtitle=""
       title={t("title")}
-      topRight={
-        <Link className="text-xs" href={`/${locale}/merchant/square`} style={{ color: "var(--muted)" }}>
+      titleAction={
+        <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/square`}>
           {t("back")}
         </Link>
       }

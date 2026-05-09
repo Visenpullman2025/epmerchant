@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import MerchantAvailabilityCalendar from "@/components/merchant/MerchantAvailabilityCalendar";
@@ -29,48 +28,33 @@ export default async function MerchantDashboardPage({ params }: Props) {
 
   return (
     <main className="app-shell">
-      <header className="merchant-topbar">
-        <span className="merchant-brand">{t("brand")}</span>
-        <span className="merchant-status-chip" style={{ backgroundColor: "var(--ok)", color: "#fff" }}>
-          {t("online")}
-        </span>
-      </header>
-
-      <section className="merchant-hero">
-        <Image
-          alt={t("heroAlt")}
-          height={432}
-          priority
-          src="/images/merchant-dashboard-hero.svg"
-          width={720}
-        />
-      </section>
-
       <section className="merchant-grid">
         <article className="apple-card">
-          <h1 className="merchant-page-title">{t("title")}</h1>
-          <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-            {t("subtitle")}
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="merchant-page-title">{t("title")}</h1>
+            <span className="merchant-status-chip" style={{ backgroundColor: "var(--ok)", color: "#fff" }}>
+              {t("online")}
+            </span>
+          </div>
           <div className="merchant-kpi mt-4">
-            <div className="merchant-kpi-card">
+            <Link className="merchant-kpi-card merchant-kpi-link" href={`/${locale}/merchant/orders`}>
               <p className="text-xs" style={{ color: "var(--muted)" }}>
                 {t("totalOrders")}
               </p>
               <p className="mt-1 text-lg font-semibold">{totalOrders}</p>
-            </div>
-            <div className="merchant-kpi-card">
+            </Link>
+            <Link className="merchant-kpi-card merchant-kpi-link" href={`/${locale}/merchant/order-requests`}>
               <p className="text-xs" style={{ color: "var(--muted)" }}>
                 {t("pendingConfirm")}
               </p>
               <p className="mt-1 text-lg font-semibold">{pendingOrders}</p>
-            </div>
-            <div className="merchant-kpi-card">
+            </Link>
+            <Link className="merchant-kpi-card merchant-kpi-link" href={`/${locale}/merchant/wallet`}>
               <p className="text-xs" style={{ color: "var(--muted)" }}>
                 {t("completedRevenue")}
               </p>
               <p className="mt-1 text-lg font-semibold">฿ {completedRevenue.toLocaleString()}</p>
-            </div>
+            </Link>
           </div>
         </article>
 
@@ -89,9 +73,6 @@ export default async function MerchantDashboardPage({ params }: Props) {
               {pendingOrders > 0 ? t("pendingConfirm") : t("noPendingOrders")}
             </span>
           </div>
-          <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-            {totalOrders > 0 ? t("onlineOrderDesc") : t("onlineOrderEmptyDesc")}
-          </p>
           <div className="mt-3 flex gap-2">
             <Link className="apple-btn-primary inline-flex items-center justify-center" href={`/${locale}/merchant/order-requests`}>
               {t("goOrderCenter")}

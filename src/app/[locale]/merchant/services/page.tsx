@@ -90,17 +90,8 @@ export default function MerchantServicesPage() {
 
   return (
     <MerchantScaffold
-      brand={t("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={t("heroAlt")}
-      heroSrc="/images/merchant-onboarding-hero.svg"
-      subtitle=""
-      title=""
-      topRight={
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
-          {t("pricingMode")}
-        </span>
-      }
+      title={t("title")}
     >
       <div className="mt-4 space-y-4">
         {message ? (

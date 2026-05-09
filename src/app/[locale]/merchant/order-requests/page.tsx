@@ -13,13 +13,8 @@ export default async function MerchantOrderRequestsPage({ params }: Props) {
 
   return (
     <MerchantScaffold
-      brand={t("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={t("heroAlt")}
-      heroSrc="/images/merchant-dashboard-hero.svg"
-      subtitle={t("subtitle")}
       title={t("title")}
-      topRight={<span className="text-xs" style={{ color: "var(--muted)" }}>{t("live")}</span>}
     >
       <MerchantOrderRequestsBoard />
     </MerchantScaffold>

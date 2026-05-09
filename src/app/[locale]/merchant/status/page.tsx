@@ -1,8 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
+import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import { getMerchantBffJson } from "@/lib/api/merchant-server";
 import { normalizeMerchantReviewStatus } from "@/lib/merchant/verification-status";
 
@@ -47,27 +47,10 @@ export default async function MerchantStatusPage({ params }: Props) {
   const t = await getTranslations("MerchantStatus");
 
   return (
-    <main className="app-shell">
-      <header className="merchant-topbar">
-        <span className="merchant-brand">{t("brand")}</span>
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
-          {t("reviewing")}
-        </span>
-      </header>
-      <section className="merchant-hero">
-        <Image
-          alt={t("heroAlt")}
-          height={432}
-          priority
-          src="/images/merchant-dashboard-hero.svg"
-          width={720}
-        />
-      </section>
-      <section className="apple-card">
-        <h1 className="merchant-page-title">{t("title")}</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-          {t("desc")}
-        </p>
+    <MerchantScaffold
+      footer={<MerchantBottomNav locale={locale} />}
+      title={t("title")}
+    >
         <div className="mt-4 rounded-xl p-3" style={{ border: `1px solid ${statusTone(status)}` }}>
           <span className="merchant-status-chip" style={{ backgroundColor: `${statusTone(status)}22`, color: statusTone(status) }}>
             {status === "approved"
@@ -104,8 +87,6 @@ export default async function MerchantStatusPage({ params }: Props) {
         <Link className="apple-btn-secondary mt-3 inline-flex w-full items-center justify-center" href={`/${locale}/merchant/dashboard`}>
           {t("goDashboard")}
         </Link>
-      </section>
-      <MerchantBottomNav locale={locale} />
-    </main>
+    </MerchantScaffold>
   );
 }

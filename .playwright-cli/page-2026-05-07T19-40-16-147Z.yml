@@ -1,0 +1,17 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e25] [cursor=pointer]:
+    - img [ref=e26]
+  - alert [ref=e29]
+  - main [ref=e368]:
+    - generic [ref=e370]: 资料加载中...
+    - navigation [ref=e371]:
+      - link "总览" [ref=e372] [cursor=pointer]:
+        - /url: /zh/merchant/dashboard
+      - link "待办" [ref=e373] [cursor=pointer]:
+        - /url: /zh/merchant/order-requests
+      - link "能力" [ref=e374] [cursor=pointer]:
+        - /url: /zh/merchant/capabilities
+      - link "广场" [ref=e375] [cursor=pointer]:
+        - /url: /zh/merchant/square
+      - link "资料" [ref=e376] [cursor=pointer]:
+        - /url: /zh/merchant/profile

@@ -19,8 +19,8 @@ import { fetchOrdersForStatus } from "./order-fetch";
 import { toDateTimeLocalValue } from "./order-format";
 import { emptyReviewDraft, type ReviewDraft } from "./review";
 
-export function useMerchantOrdersController(t: Translate) {
-  const [activeStatus, setActiveStatus] = useState<MerchantOrderStatus>("new");
+export function useMerchantOrdersController(t: Translate, initialStatus: MerchantOrderStatus = "new") {
+  const [activeStatus, setActiveStatus] = useState<MerchantOrderStatus>(initialStatus);
   const [orders, setOrders] = useState<MerchantOrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -51,6 +51,10 @@ export function useMerchantOrdersController(t: Translate) {
     setOrders(result.orders);
     primeDrafts(result.orders);
   }, [primeDrafts]);
+
+  useEffect(() => {
+    setActiveStatus(initialStatus);
+  }, [initialStatus]);
 
   useEffect(() => {
     let active = true;

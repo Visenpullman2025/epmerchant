@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e25] [cursor=pointer]:
+    - img [ref=e26]
+  - alert [ref=e29]
+  - main [ref=e310]:
+    - generic [ref=e311]:
+      - generic [ref=e312]:
+        - heading "新建服务能力" [level=1] [ref=e313]
+        - link "返回列表" [ref=e315] [cursor=pointer]:
+          - /url: /zh/merchant/capabilities
+      - generic [ref=e317]:
+        - generic [ref=e318]:
+          - generic [ref=e319]: 标准服务
+          - combobox [ref=e320]:
+            - option "请选择标准服务" [selected]
+            - option "空调清洗"
+            - option "空调清洗"
+            - option "家庭保洁"
+            - option "家庭保洁"
+            - option "家庭保洁"
+            - option "蒸汽清洗"
+            - option "空调清洗"
+            - option "搬家运输"
+            - option "除虫消杀"
+            - option "家电维修"
+        - generic [ref=e321]:
+          - checkbox "启用" [checked] [ref=e322]
+          - text: 启用
+        - generic [ref=e323]:
+          - generic [ref=e324]: 接单状态
+          - combobox [ref=e325]:
+            - option "可接单" [selected]
+            - option "限量接单"
+            - option "暂停接单"
+        - generic [ref=e326]:
+          - generic [ref=e327]: 服务范围
+          - textbox [ref=e328]: "{}"
+        - generic [ref=e329]:
+          - generic [ref=e330]: 基础计价
+          - textbox [ref=e331]: "{}"
+        - generic [ref=e332]:
+          - generic [ref=e333]: 距离附加费
+          - textbox [ref=e334]: "{}"
+        - generic [ref=e335]:
+          - generic [ref=e336]: 接单容量
+          - textbox [ref=e337]: "{}"
+        - generic [ref=e338]:
+          - generic [ref=e339]: 可服务时段
+          - textbox [ref=e340]: "[]"
+        - generic [ref=e341]:
+          - generic [ref=e342]: 开放日（逗号分隔）
+          - textbox "2026-05-10, 2026-05-11" [ref=e343]
+        - generic [ref=e344]:
+          - generic [ref=e345]: 不可接单日期（逗号分隔）
+          - textbox "2026-05-12, 2026-05-13" [ref=e346]
+        - button "新建能力" [ref=e348] [cursor=pointer]
+    - navigation [ref=e349]:
+      - link "总览" [ref=e350] [cursor=pointer]:
+        - /url: /zh/merchant/dashboard
+      - link "待办" [ref=e351] [cursor=pointer]:
+        - /url: /zh/merchant/order-requests
+      - link "能力" [ref=e352] [cursor=pointer]:
+        - /url: /zh/merchant/capabilities
+      - link "广场" [ref=e353] [cursor=pointer]:
+        - /url: /zh/merchant/square
+      - link "资料" [ref=e354] [cursor=pointer]:
+        - /url: /zh/merchant/profile

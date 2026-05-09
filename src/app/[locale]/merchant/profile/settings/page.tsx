@@ -48,14 +48,10 @@ export default function MerchantProfileSettingsPage() {
 
   return (
     <MerchantScaffold
-      brand={t("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={t("heroAlt")}
-      heroSrc="/images/merchant-onboarding-hero.svg"
-      subtitle=""
       title={t("settingsPageTitle")}
-      topRight={
-        <Link className="text-xs" href={`/${locale}/merchant/profile`} style={{ color: "var(--muted)" }}>
+      titleAction={
+        <Link className="apple-btn-secondary inline-flex items-center justify-center" href={`/${locale}/merchant/profile`}>
           {t("backToHub")}
         </Link>
       }

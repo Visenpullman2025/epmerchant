@@ -22,7 +22,6 @@ function formatTimeLabel(isoString: string) {
 
 export default function MerchantSquarePage() {
   const t = useTranslations("SquarePage");
-  const tAuth = useTranslations("MerchantAuth");
   const params = useParams<{ locale: string }>();
   const locale = params.locale || "zh";
 
@@ -83,32 +82,13 @@ export default function MerchantSquarePage() {
 
   return (
     <MerchantScaffold
-      brand={tAuth("brand")}
       footer={<MerchantBottomNav locale={locale} />}
-      heroAlt={tAuth("brand")}
-      heroSrc="/images/merchant-dashboard-hero.svg"
-      subtitle=""
-      title={t("title")}
-      topRight={
-        <button
-          className="text-xs"
-          onClick={() => window.location.reload()}
-          style={{ color: "var(--muted)" }}
-          type="button"
-        >
-          {t("refresh")}
-        </button>
-      }
+      surface={false}
     >
-      <div className="mt-4 space-y-3" id="square-feed">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--muted)" }}>
-            <span className="rounded-full px-2 py-1" style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)", color: "var(--primary)" }}>
-              {t("live")}
-            </span>
-            <span>{t("subtitle")}</span>
-          </div>
-        </div>
+      <div className="merchant-square-page space-y-3" id="square-feed">
+        <header className="merchant-square-header">
+          <h1>{t("title")}</h1>
+        </header>
 
         <div className="flex gap-1 rounded-xl border p-1" style={{ borderColor: "var(--border)", backgroundColor: "color-mix(in srgb, var(--border) 25%, transparent)" }}>
           <button
