@@ -40,6 +40,33 @@ export default function MerchantProfileInfoPage() {
   const [typeMessage, setTypeMessage] = useState("");
   const [typeTone, setTypeTone] = useState<"success" | "error">("error");
 
+  const [locating, setLocating] = useState(false);
+  const [locationHint, setLocationHint] = useState("");
+
+  function useCurrentLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocationHint("浏览器不支持定位");
+      return;
+    }
+    setLocating(true);
+    setLocationHint("");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setLat(lat.toFixed(7));
+        setLng(lng.toFixed(7));
+        setLocating(false);
+        setLocationHint(`已定位：${lat.toFixed(5)}, ${lng.toFixed(5)}（精度 ±${Math.round(position.coords.accuracy)}m）`);
+      },
+      (err) => {
+        setLocating(false);
+        setLocationHint(err.message || "定位失败，请允许浏览器定位或手动输入");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
   useEffect(() => {
     let active = true;
     async function loadProfile() {
@@ -175,7 +202,21 @@ export default function MerchantProfileInfoPage() {
           <textarea className="field-textarea" onChange={(e) => setIntro(e.target.value)} value={intro} />
         </div>
         <div className="grid grid-cols-1 gap-3 rounded-xl border p-3" style={{ borderColor: "var(--border)" }}>
-          <p className="field-label">{t("locationSectionTitle")}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="field-label" style={{ margin: 0 }}>{t("locationSectionTitle")}</p>
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locating}
+              className="apple-btn-secondary text-xs"
+              style={{ padding: "6px 12px" }}
+            >
+              {locating ? "定位中…" : "📍 使用当前位置"}
+            </button>
+          </div>
+          {locationHint ? (
+            <div className="text-xs" style={{ color: "var(--muted)" }}>{locationHint}</div>
+          ) : null}
           <div>
             <label className="field-label">{t("baseAddress")}</label>
             <input className="field-input" onChange={(e) => setBaseAddress(e.target.value)} value={baseAddress} />
