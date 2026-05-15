@@ -135,7 +135,9 @@ export function SquareFeed({ initialTab = 'recommended', topics }: SquareFeedPro
   );
 
   useEffect(() => {
-    setPosts([]);
+    // 不清空 posts —— 让旧列表保留显示直到新数据回来（stale-while-revalidate）
+    // 避免「内容消失 → 空白闪一下 → 新内容出现」的三帧闪烁。
+    // load(reset=true) 内部 setPosts(reset ? newList : [...prev, ...newList]) 会原子替换。
     pageRef.current = 1;
     hasMoreRef.current = true;
     setHasMore(true);
