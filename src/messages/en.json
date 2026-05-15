@@ -3,11 +3,11 @@
     "language": "Language switch"
   },
   "MerchantNav": {
-    "dashboard": "Overview",
-    "orders": "Tasks",
-    "services": "Capabilities",
+    "dashboard": "Home",
+    "orders": "Operations",
+    "services": "Services",
     "square": "Square",
-    "profile": "Profile"
+    "profile": "Me"
   },
   "SquarePage": {
     "title": "Square",
@@ -570,6 +570,17 @@
     "savingLanguage": "Saving...",
     "languageSaved": "Language preference is bound to your account",
     "logout": "Log out",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "legalSettings": "Legal & Agreements"
+  },
+  "LegalPage": {
+    "combinedTitle": "Merchant Agreement & Privacy Policy",
+    "agreeButton": "Agree and continue onboarding",
+    "agreeCheckbox": "I have read and agree to all of the above"
+  },
+  "SettingsLegal": {
+    "title": "Legal & Agreements",
+    "back": "Back",
+    "currentVersion": "Version you accepted: v{version} · {date}"
   }
 }

@@ -32,9 +32,13 @@ export interface LegalDoc {
 }
 
 const LEGAL_ROOT = path.resolve(process.cwd(), '../ep-shared/legal');
+const FALLBACK_LOCALE = 'zh';
 
 export function readLegalDoc(code: string, locale: string): LegalDoc {
-  const filePath = path.join(LEGAL_ROOT, code, `${locale}.md`);
+  const primary = path.join(LEGAL_ROOT, code, `${locale}.md`);
+  const filePath = fs.existsSync(primary)
+    ? primary
+    : path.join(LEGAL_ROOT, code, `${FALLBACK_LOCALE}.md`);
   const raw = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(raw);
   return { code, meta: data as LegalDocMeta, body: content };

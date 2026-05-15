@@ -3,11 +3,11 @@
     "language": "สลับภาษา"
   },
   "MerchantNav": {
-    "dashboard": "ภาพรวม",
-    "orders": "งาน",
-    "services": "ความสามารถ",
+    "dashboard": "หน้าหลัก",
+    "orders": "ปฏิบัติการ",
+    "services": "บริการ",
     "square": "สแควร์",
-    "profile": "โปรไฟล์"
+    "profile": "ฉัน"
   },
   "SquarePage": {
     "title": "สแควร์",
@@ -570,6 +570,17 @@
     "savingLanguage": "กำลังบันทึก...",
     "languageSaved": "ผูกภาษากับบัญชีแล้ว",
     "logout": "ออกจากระบบ",
-    "loggingOut": "กำลังออกจากระบบ..."
+    "loggingOut": "กำลังออกจากระบบ...",
+    "legalSettings": "กฎหมายและข้อตกลง"
+  },
+  "LegalPage": {
+    "combinedTitle": "ข้อตกลงผู้ขายและนโยบายความเป็นส่วนตัว",
+    "agreeButton": "ยอมรับและสมัครเป็นผู้ขาย",
+    "agreeCheckbox": "ฉันได้อ่านและยอมรับข้อตกลงทั้งหมดข้างต้น"
+  },
+  "SettingsLegal": {
+    "title": "กฎหมายและข้อตกลง",
+    "back": "ย้อนกลับ",
+    "currentVersion": "เวอร์ชันที่คุณยอมรับ: v{version} · {date}"
   }
 }
