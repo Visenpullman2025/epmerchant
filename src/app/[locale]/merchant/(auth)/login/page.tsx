@@ -9,6 +9,11 @@ import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import type { LoginResponse } from "@/lib/api/merchant-api";
 import { supabase } from "@/lib/supabase/client";
 
+// 跳过 SSG 预渲染：supabase 客户端模块顶层 createBrowserClient 需要 NEXT_PUBLIC_SUPABASE_* env，
+// build 时若 env 未注入会抛错。运行时 SSR 仍可工作（env 此时已加载）。
+// 同样的处理也用在 ep/auth/login。
+export const dynamic = 'force-dynamic';
+
 export default function MerchantLoginPage() {
   const t = useTranslations("MerchantAuth");
   const router = useRouter();
