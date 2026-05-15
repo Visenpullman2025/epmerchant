@@ -39,7 +39,7 @@ export default function MerchantCapabilityCard({ item, editHref, standardService
         <Detail label={t("capacityRule")} value={capacity} />
         <Detail label={t("openDatesSummary")} value={openDates} />
       </div>
-      <Link className="apple-btn-secondary mt-3 inline-flex items-center justify-center" href={editHref}>
+      <Link className="apple-btn-secondary mt-3 inline-flex items-center justify-center" href={editHref as `/${string}`}>
         {t("edit")}
       </Link>
     </article>

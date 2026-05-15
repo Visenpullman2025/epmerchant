@@ -61,7 +61,7 @@ export default function MerchantOrderRequestCard({ item, detailHref, locale, t }
         <Detail label={t("serviceAddress")} value={serviceAddressText(item.serviceAddress)} />
       </div>
 
-      <Link className="apple-btn-secondary mt-3 inline-flex items-center justify-center" href={detailHref}>
+      <Link className="apple-btn-secondary mt-3 inline-flex items-center justify-center" href={detailHref as `/${string}`}>
         {t("viewDetail")}
       </Link>
     </article>

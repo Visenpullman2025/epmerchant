@@ -18,7 +18,7 @@ export default function MerchantProfileMenuRow({
   title: string;
 }) {
   return (
-    <Link className="merchant-profile-menu-row" href={href}>
+    <Link className="merchant-profile-menu-row" href={href as `/${string}`}>
       <span className="merchant-profile-menu-row-icon">
         <MerchantProfileMenuGlyph color={glyphColor} feature={feature} />
       </span>
