@@ -21,18 +21,26 @@ export default function MerchantLoginPage() {
   const [loading, setLoading] = useState(false);
   const [oauthBusy, setOauthBusy] = useState<"google" | "line" | null>(null);
 
+  const initialOauthError = (() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("error") ?? "";
+  })();
   useEffect(() => {
-    const oauthErr = new URLSearchParams(window.location.search).get("error");
-    if (oauthErr) setError(oauthErr);
+    if (initialOauthError) setError(initialOauthError);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function signInWithProvider(provider: "google" | "line") {
     setError("");
+    if (provider === "line") {
+      setError("LINE 登录暂未开放，敬请期待");
+      return;
+    }
     setOauthBusy(provider);
     const next = `/${locale}/merchant/dashboard`;
     const redirectTo = `${window.location.origin}/${locale}/merchant/callback?next=${encodeURIComponent(next)}`;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: "google",
       options: { redirectTo },
     });
     if (oauthError) {
