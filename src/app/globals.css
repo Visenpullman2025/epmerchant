@@ -150,6 +150,14 @@ body::-webkit-scrollbar { width: 0; height: 0; }
   border-radius: 12px;
 }
 
+/* iOS Safari focus 自动缩放兜底：input/textarea/select < 16px 时点击会触发整页放大，
+ * 强制 16px 防 zoom。如某处视觉确实要更小字号，请显式覆盖（接受 zoom 代价）。 */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
 .app-input {
   display: block;
   background: var(--surface);
@@ -157,6 +165,7 @@ body::-webkit-scrollbar { width: 0; height: 0; }
   border: 1px solid var(--border);
   border-radius: 10px;
   font-family: var(--font-body);
+  font-size: 16px;
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
   appearance: none;
   -webkit-appearance: none;
@@ -354,6 +363,7 @@ a {
   background: color-mix(in srgb, var(--card-bg) 92%, #ffffff);
   color: var(--text);
   padding: 12px 13px;
+  font-size: 16px; /* iOS Safari 防 focus 缩放 */
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
