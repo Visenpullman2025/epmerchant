@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { getJson } from "@/lib/merchant/auth-client";
 import MerchantBottomNav from "@/components/merchant/MerchantBottomNav";
 import MerchantProfileMenuRow from "@/components/merchant/MerchantProfileMenuRow";
-import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import type { MerchantProfileResponse, MerchantWalletSummaryResponse } from "@/lib/api/merchant-api";
 
 const THAI_RED = "var(--thai-red)";
@@ -65,11 +64,89 @@ export default function MerchantProfileHubPage() {
           : t("unsubmitted");
 
   return (
-    <MerchantScaffold
-      footer={<MerchantBottomNav locale={locale} />}
-      surface={false}
-    >
-      <div className="merchant-profile-page space-y-4">
+    <main className="app-page-bg" style={{ minHeight: "100vh", paddingBottom: 110 }}>
+      {/* 暗金 hero + 店徽 + 店名 + 4 数字 */}
+      <section
+        style={{
+          position: "relative",
+          padding: "20px 20px 28px",
+          background:
+            "linear-gradient(160deg, var(--brand-primary) 0%, var(--brand-primary-deep) 100%)",
+          color: "#fff",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: -60,
+            right: -60,
+            width: 200,
+            height: 200,
+            background: "radial-gradient(circle, rgba(230,207,149,0.4), transparent 65%)",
+            borderRadius: "50%",
+            pointerEvents: "none",
+          }}
+        />
+        <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
+          <div
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 16,
+              background: "linear-gradient(135deg, var(--brand-accent), var(--brand-accent-deep))",
+              color: "var(--brand-primary-deep)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: 800,
+              flexShrink: 0,
+            }}
+          >
+            {(merchantName || "·").slice(0, 1)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: 17,
+                fontWeight: 700,
+                margin: 0,
+                letterSpacing: "-0.015em",
+                color: "#fff",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {merchantName || "—"}
+            </h1>
+            <p style={{ margin: "4px 0 0", fontSize: 14, opacity: 0.85 }}>
+              {phone || "—"} · <span style={{ color: "var(--brand-accent-light)" }}>{verificationLabel}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* 4 数字（评分/接单/范围/粉丝 — 没数据先占位）*/}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 8,
+            marginTop: 16,
+            position: "relative",
+          }}
+        >
+          <Stat n={balanceDisplay ?? "—"} l="余额" />
+          <Stat n="—" l="评分" />
+          <Stat n="—" l="接单" />
+          <Stat n="—" l="粉丝" />
+        </div>
+      </section>
+
+      <div className="merchant-profile-page space-y-4" style={{ padding: "14px 16px 0" }}>
         {message ? (
           <div className="rounded-xl border p-3 text-sm" style={{ borderColor: "var(--danger)", color: "var(--danger)" }}>
             {message}
@@ -186,6 +263,26 @@ export default function MerchantProfileHubPage() {
           </>
         )}
       </div>
-    </MerchantScaffold>
+      <MerchantBottomNav locale={locale} />
+    </main>
+  );
+}
+
+function Stat({ n, l }: { n: string | number; l: string }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
+          fontSize: 17,
+          color: "var(--brand-accent-light)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {n}
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{l}</div>
+    </div>
   );
 }
