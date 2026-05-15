@@ -31,7 +31,8 @@ export async function POST(request: Request) {
       email: body.email,
       password: body.password,
       ...(body.contactPhone ? { contactPhone: body.contactPhone } : {}),
-      ...(body.locale ? { locale: body.locale } : {})
+      ...(body.locale ? { locale: body.locale } : {}),
+      ...(Array.isArray(body.consent_versions) ? { consent_versions: body.consent_versions } : {})
     };
 
     const upstream = await fetch(buildBackendUrl("/api/v1/merchant/auth/register"), {

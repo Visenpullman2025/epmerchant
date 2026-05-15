@@ -2,11 +2,29 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { postJson } from "@/lib/merchant/auth-client";
 import MerchantScaffold from "@/components/merchant/MerchantScaffold";
 import type { RegisterResponse } from "@/lib/api/merchant-api";
+import { localeHref } from "@/lib/typed-routes";
+
+// 商家端独立 sessionStorage key，避免与 ep（用户端）冲突。
+const PENDING_FORM_KEY = "expath.merchant.pending_register_form";
+const PENDING_CONSENT_KEY = "expath.merchant.pending_consent";
+
+interface PendingForm {
+  merchantName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface PendingConsent {
+  versions: Array<{ code: string; version: string }>;
+  role: string;
+  accepted_at: string;
+}
 
 export default function MerchantRegisterPage() {
   const t = useTranslations("MerchantAuth");
@@ -20,6 +38,58 @@ export default function MerchantRegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const consumedConsentRef = useRef(false);
+
+  // On mount: if we have both pending form and pending consent (i.e. merchant
+  // just returned from the combined legal page), auto-submit registration.
+  useEffect(() => {
+    if (consumedConsentRef.current) return;
+    if (typeof window === "undefined") return;
+    const consentRaw = window.sessionStorage.getItem(PENDING_CONSENT_KEY);
+    const formRaw = window.sessionStorage.getItem(PENDING_FORM_KEY);
+    if (!consentRaw || !formRaw) return;
+    let consent: PendingConsent;
+    let form: PendingForm;
+    try {
+      consent = JSON.parse(consentRaw) as PendingConsent;
+      form = JSON.parse(formRaw) as PendingForm;
+    } catch {
+      window.sessionStorage.removeItem(PENDING_CONSENT_KEY);
+      window.sessionStorage.removeItem(PENDING_FORM_KEY);
+      return;
+    }
+    consumedConsentRef.current = true;
+    setMerchantName(form.merchantName);
+    setEmail(form.email);
+    setPassword(form.password);
+    setConfirmPassword(form.confirmPassword);
+    void submitWithConsent(form, consent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only
+
+  async function submitWithConsent(form: PendingForm, consent: PendingConsent) {
+    setLoading(true);
+    setError("");
+    const result = await postJson<RegisterResponse>("/api/merchant/auth/register", {
+      merchantName: form.merchantName,
+      email: form.email,
+      password: form.password,
+      locale,
+      consent_versions: consent.versions
+    });
+    setLoading(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(PENDING_CONSENT_KEY);
+    }
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(PENDING_FORM_KEY);
+    }
+    router.push(`/${result.data.preferredLocale}/merchant/dashboard`);
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,20 +100,20 @@ export default function MerchantRegisterPage() {
       return;
     }
 
-    setLoading(true);
-    const result = await postJson<RegisterResponse>("/api/merchant/auth/register", {
-      merchantName,
-      email,
-      password,
-      locale
-    });
-    setLoading(false);
-
-    if (!result.ok) {
-      setError(result.message);
-      return;
+    if (typeof window !== "undefined") {
+      const pending: PendingForm = {
+        merchantName: merchantName.trim(),
+        email: email.trim(),
+        password,
+        confirmPassword
+      };
+      window.sessionStorage.setItem(PENDING_FORM_KEY, JSON.stringify(pending));
     }
-    router.push(`/${result.data.preferredLocale}/merchant/dashboard`);
+    router.push(
+      localeHref(
+        `/${locale}/legal/combined?role=merchant&next=/${locale}/merchant/register`
+      )
+    );
   }
 
   return (

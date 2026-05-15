@@ -1,57 +1,203 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────
+   商家端暗金主题 token —— 与客户端镜像
+   后端 /api/settings/public 返回 ui.brand.color_primary / color_accent
+   可在运行时通过 layout.tsx 注入覆盖 :root
+   ───────────────────────────────────────────────── */
+
 :root {
-  --bg: #eef3ff;
-  --bg-grad-a: #e8f0ff;
-  --bg-grad-b: #f7fbff;
+  color-scheme: light;
+
+  /* 品牌核心（暗金） */
+  --brand-primary: #8a6a25;       /* 深金 — 与客户端暗绿 #0f523c 镜像 */
+  --brand-primary-deep: #5e4715;  /* 古铜深 */
+  --brand-accent: #c9a96e;        /* brass — 与客户端同款 */
+  --brand-accent-deep: #a07a32;
+  --brand-accent-light: #e6cf95;
+
+  /* 兼容旧 token —— 商户端老组件继续用，自动跟着暗金 */
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-primary-deep);
+  --primary-light: rgba(138, 106, 37, 0.08);
+  --accent: var(--brand-accent);
+
+  /* 语义 */
+  --ok: #1d8765;
+  --success: var(--ok);
+  --warn: #d68b1f;
+  --warning: var(--warn);
+  --danger: #b9402d;
+  --info: #4a7c8a;
+
+  /* 暖灰 9 阶（米黄系，对应客户端的冷灰） */
+  --gray-50: #faf6e9;
+  --gray-100: #f0e8d4;
+  --gray-200: #e3d5b2;
+  --gray-300: #c9b58a;
+  --gray-400: #a89665;
+  --gray-500: #7d6d4a;
+  --gray-600: #5f5538;
+  --gray-700: #4a3f25;
+  --ink-900: #2a1f0a;
+
+  /* 旧表面 token 保持名字，值改暗金 */
+  --bg: var(--gray-50);
+  --bg-grad-a: #f5ecd3;
+  --bg-grad-b: var(--gray-50);
   --card-bg: #ffffff;
-  --text: #0f1a32;
-  --muted: #5f6e8f;
-  --border: #dbe5ff;
-  --primary: #2d6bff;
-  --primary-hover: #1f57df;
-  --accent: #7f53ff;
-  --ok: #16a34a;
-  --warn: #eab308;
-  --danger: #ef4444;
-  --topbar-bg: rgba(255, 255, 255, 0.7);
-  /* 与客户端 expath 泰国旗点缀色一致，用于个人中心菜单图标 */
+  --text: var(--ink-900);
+  --muted: var(--gray-500);
+  --border: rgba(138, 106, 37, 0.12);
+  --border-strong: rgba(138, 106, 37, 0.22);
+  --foreground: var(--ink-900);
+  --foreground-muted: var(--gray-500);
+  --background: var(--gray-50);
+  --surface: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.78);
+
+  /* 泰国旗点缀色（个人中心菜单图标）保留 */
   --thai-red: #b42338;
   --thai-blue: #1e3f73;
+
+  /* 字体 */
+  --font-display: 'Sora', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* 字号 (Apple HIG 3 主 + 2 展示，跨端一致) */
+  --ts-caption: 11px;
+  --ts-body: 14px;
+  --ts-section: 17px;
+  --ts-stat: 22px;
+  --ts-display: 28px;
+
+  /* 阴影 */
+  --sh-xs: 0 1px 2px rgba(138, 106, 37, 0.05);
+  --sh-sm: 0 4px 12px rgba(138, 106, 37, 0.08);
+  --sh-md: 0 10px 28px rgba(138, 106, 37, 0.12);
+  --sh-lg: 0 20px 56px rgba(138, 106, 37, 0.18);
+  --sh-brand: 0 8px 24px rgba(201, 169, 110, 0.28);
+
+  /* 圆角 */
+  --r-chip: 6px;
+  --r-button: 8px;
+  --r-card: 12px;
+  --r-hero: 16px;
+  --r-pill: 999px;
+
+  /* 动效 */
+  --motion-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-base: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-slow: 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #090f1f;
-    --bg-grad-a: #0c1326;
-    --bg-grad-b: #1a1c46;
-    --card-bg: rgba(18, 25, 45, 0.78);
-    --text: #e7edff;
-    --muted: #9eb0d8;
-    --border: rgba(165, 186, 241, 0.26);
-    --primary: #4a86ff;
-    --primary-hover: #3a73ea;
-    --accent: #9877ff;
-    --ok: #22c55e;
-    --warn: #f59e0b;
-    --danger: #f87171;
-    --topbar-bg: rgba(12, 19, 38, 0.52);
-    --thai-red: #c93d52;
-    --thai-blue: #4a7fd4;
-  }
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-border: var(--border);
+  --color-primary: var(--brand-primary);
+  --color-accent: var(--brand-accent);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
-  background:
-    radial-gradient(1200px 720px at 12% -12%, var(--bg-grad-a), transparent 65%),
-    radial-gradient(900px 540px at 112% 18%, rgba(143, 105, 255, 0.15), transparent 60%),
-    var(--bg);
+  background: var(--gray-50);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
+
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { width: 0; height: 0; }
+
+.hide-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ─────────────────────────────────────────────────
+   客户端 ep 同款 utility class（共享设计系统）
+   ───────────────────────────────────────────────── */
+
+.app-page-bg {
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(138, 106, 37, 0.06) 0%, transparent 55%),
+    var(--gray-50);
+}
+
+.app-glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--sh-sm);
+}
+
+.app-panel-muted {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.app-input {
+  display: block;
+  background: var(--surface);
+  color: var(--ink-900);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.app-input::placeholder { color: var(--gray-400); }
+.app-input:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.22);
+  outline: none;
+}
+select.app-input {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%237d6d4a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+@keyframes appReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.app-reveal { animation: appReveal 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes merSpin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-reveal { animation: none; }
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ── Apple HIG 字号 utility（跨端复用一致）── */
+.ts-caption { font-size: var(--ts-caption); line-height: 1.5; }
+.ts-body    { font-size: var(--ts-body);    line-height: 1.55; }
+.ts-section { font-size: var(--ts-section); line-height: 1.4; font-weight: 600; letter-spacing: -0.01em; }
+.ts-stat    { font-size: var(--ts-stat);    line-height: 1.1; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+.ts-display { font-size: var(--ts-display); line-height: 1.05; font-family: var(--font-display); font-weight: 800; letter-spacing: -0.025em; }
 
 a {
   color: inherit;
@@ -71,7 +217,7 @@ a {
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--card-bg);
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--sh-md);
   backdrop-filter: blur(8px);
   padding: 18px;
 }
@@ -92,14 +238,14 @@ a {
 }
 
 .merchant-brand {
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   font-weight: 700;
   color: var(--muted);
 }
 
 .merchant-page-title {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   margin: 4px 0 0;
 }
@@ -124,7 +270,7 @@ a {
   overflow: hidden;
   border: 1px solid var(--border);
   margin-bottom: 14px;
-  box-shadow: 0 18px 30px rgba(27, 44, 89, 0.24);
+  box-shadow: var(--sh-md);
 }
 
 .merchant-hero img {
@@ -148,7 +294,7 @@ a {
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   padding: 6px 10px;
 }
@@ -171,13 +317,13 @@ a {
 }
 
 .apple-btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-deep));
   color: #ffffff;
-  box-shadow: 0 10px 20px rgba(45, 107, 255, 0.26);
+  box-shadow: var(--sh-sm);
 }
 
 .apple-btn-primary:hover {
-  background: var(--primary-hover);
+  box-shadow: var(--sh-md);
   transform: translateY(-1px);
 }
 
@@ -195,7 +341,7 @@ a {
   display: block;
   margin-bottom: 7px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -232,7 +378,7 @@ a {
   min-height: 28px;
   min-width: fit-content;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1;
   padding: 5px 12px;
@@ -325,7 +471,7 @@ a {
   min-height: 30px;
   border-radius: 999px;
   padding: 0 12px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 14%, transparent);
@@ -342,7 +488,7 @@ a {
   align-items: center;
   border-radius: 999px;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--muted);
   background: color-mix(in srgb, var(--border) 55%, transparent);
@@ -495,7 +641,7 @@ a {
 
 .merchant-advanced-fields summary {
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 11pxrem;
   font-weight: 600;
 }
 
@@ -536,7 +682,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--primary);
 }
@@ -556,7 +702,7 @@ a {
 }
 
 .merchant-upload-preview-hint {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -679,7 +825,7 @@ a {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
   transition: background-color 0.15s ease;
@@ -713,7 +859,7 @@ a {
 
 .merchant-profile-menu-row-desc {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--muted);
 }
@@ -726,41 +872,154 @@ a {
   z-index: 50;
   display: flex;
   justify-content: center;
-  padding: 0 14px max(10px, env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 }
 
-.merchant-bottom-nav-shell .merchant-bottom-nav {
+.merchant-bottom-nav-shell .mer-tabs {
   pointer-events: auto;
 }
 
-.merchant-bottom-nav {
-  position: relative;
+/* 5 tab 底栏（广场居中凸起，对齐 replica-merchant-home.html） */
+.mer-tabs {
   width: 100%;
   max-width: 640px;
-  margin-top: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: 14px 14px 0 0;
-  background: var(--topbar-bg);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
-  padding: 10px 8px 12px;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 8px 8px max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: flex-start;
+}
+
+.mer-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding-top: 6px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--gray-500);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+.mer-tab-icon {
+  font-size: 22px;
+  line-height: 1;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mer-tab-label {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.mer-tab.active {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* 中间凸起的广场 tab：transform 整体上移 + icon 替换成圆角金块 */
+.mer-tab.center {
+  padding-top: 0;
+  transform: translateY(-10px);
+}
+.mer-tab.center .mer-tab-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-deep));
+  color: var(--brand-primary-deep);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: var(--sh-brand);
+  margin-bottom: 4px;
+}
+.mer-tab.center .mer-tab-label {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* 兼容：保留旧 class 名映射到新结构，便于零回归 */
+.merchant-bottom-nav {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 8px 8px max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: flex-start;
 }
 
 .merchant-bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  border-radius: 10px;
-  padding: 8px 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
+  text-decoration: none;
+  color: var(--gray-500);
+  font-size: 11px;
+  padding-top: 6px;
+  gap: 2px;
 }
 
 .merchant-bottom-nav-item.active {
-  background: color-mix(in srgb, var(--primary) 20%, transparent);
-  color: var(--primary);
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* ── Legal docs prose（仅作用于 .legal-prose 子元素，不污染全局 h1/h2） ── */
+.legal-prose h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem;
+}
+.legal-prose h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.625rem;
+}
+.legal-prose h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+.legal-prose p,
+.legal-prose ul,
+.legal-prose ol {
+  line-height: 1.7;
+  margin: 0.625rem 0;
+  font-size: 0.9375rem;
+}
+.legal-prose ul,
+.legal-prose ol {
+  padding-left: 1.5rem;
+}
+.legal-prose li {
+  margin: 0.25rem 0;
+}
+.legal-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+.legal-prose th,
+.legal-prose td {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+}
+.legal-prose th {
+  background: rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+}
+.legal-prose strong {
+  font-weight: 600;
 }

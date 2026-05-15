@@ -83,6 +83,12 @@ export default function MerchantProfileSettingsPage() {
         >
           {t("goServices")}
         </Link>
+        <Link
+          className="apple-btn-secondary inline-flex w-full items-center justify-center"
+          href={`/${locale}/merchant/profile/settings/legal`}
+        >
+          {t("legalSettings")}
+        </Link>
         <button className="apple-btn-secondary w-full" disabled={loggingOut} onClick={onLogout} type="button">
           {loggingOut ? t("loggingOut") : t("logout")}
         </button>

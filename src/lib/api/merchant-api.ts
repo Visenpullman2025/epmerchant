@@ -31,6 +31,8 @@ export type RegisterRequest = {
   password: string;
   contactPhone?: string;
   locale?: LocaleCode;
+  /** 用户同意的协议版本快照（5 篇：privacy/tos/community/ugc/merchant-agreement） */
+  consent_versions?: Array<{ code: string; version: string }>;
 };
 
 export type RegisterResponse = {

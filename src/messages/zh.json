@@ -3,11 +3,11 @@
     "language": "语言切换"
   },
   "MerchantNav": {
-    "dashboard": "总览",
-    "orders": "待办",
-    "services": "能力",
+    "dashboard": "首页",
+    "orders": "运营",
+    "services": "服务",
     "square": "广场",
-    "profile": "资料"
+    "profile": "我"
   },
   "SquarePage": {
     "title": "广场",
@@ -570,6 +570,17 @@
     "savingLanguage": "保存中...",
     "languageSaved": "语言已绑定到账号",
     "logout": "退出登录",
-    "loggingOut": "退出中..."
+    "loggingOut": "退出中...",
+    "legalSettings": "法律与协议"
+  },
+  "LegalPage": {
+    "combinedTitle": "商家协议与隐私政策",
+    "agreeButton": "同意并继续入驻",
+    "agreeCheckbox": "我已完整阅读并同意上述全部协议"
+  },
+  "SettingsLegal": {
+    "title": "法律与协议",
+    "back": "返回",
+    "currentVersion": "您当前同意的版本：v{version} · {date}"
   }
 }
